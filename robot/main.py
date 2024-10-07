@@ -14,7 +14,7 @@ import threading
 from utils import HailoAsyncInference
 
 # Import picamera2 libraries
-from picamera2 import Picamera2, Preview
+from picamera2 import Picamera2
 
 def initialize_arg_parser() -> argparse.ArgumentParser:
     """Initialize argument parser for the script."""
@@ -22,7 +22,7 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
         description="Detection Example - Tracker with ByteTrack and Supervision"
     )
     parser.add_argument(
-        "-n", "--net", help="Path for the HEF model.", default="../models/yolov5m_wo_spp.hef"
+        "-n", "--net", help="Path for the HEF model.", default="../models/yolov7e6.hef"
     )
     parser.add_argument(
         "-l", "--labels", default="../settings/coco.txt", help="Path to a text file containing labels."
@@ -144,12 +144,16 @@ def main() -> None:
 
     # Initialize picamera2
     picam2 = Picamera2()
-    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640, 640)}))
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (1980, 1080)}))
+    
     picam2.start()
     
     # Continuously capture frames
     while True:
         image = picam2.capture_array()
+
+        # flip image
+        image = cv2.flip(image, 0)
 
         # Preprocess the frame
         preprocessed_frame: np.ndarray = preprocess_frame(image, model_h, model_w)
