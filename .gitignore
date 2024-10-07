@@ -1,3 +1,4 @@
 # Ignore everything in the models folder
 models/
 __pycache__
+*.log

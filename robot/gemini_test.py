@@ -1,4 +1,5 @@
 import google.generativeai as genai
+from IPython.display import Markdown
 import os
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
