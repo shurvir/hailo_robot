@@ -144,7 +144,7 @@ def main() -> None:
 
     # Initialize picamera2
     picam2 = Picamera2()
-    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (1980, 1080)}))
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640, 640)}))
     
     picam2.start()
     
