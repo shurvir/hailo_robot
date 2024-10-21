@@ -158,7 +158,7 @@ class Robot():
         joint_index = self._directions[direction]['joint_index']
         self._state = self.get_state()
         adjusted_degrees = math.degrees(self._state[joint]) + sign * degrees
-        self.exact_move(joint_index, adjusted_degrees, direction, delay=delay)
+        self.exact_move(joint_index, adjusted_degrees, delay=delay)
 
 
     def move_left(self, degrees: int, delay: int = 0):
@@ -212,6 +212,34 @@ class Robot():
         command = f'{{"T":114,"led":{intensity}}}'
         self.do(command)
 
+    def look_around(self):
+        self.set_light(100)
+        self.move_to_position(e=60,b=90,h=180,delay=6)
+        self.set_light(0)
+        self.move_to_position(e=60,b=-90,delay=16)
+        self.move_to_position(e=115,b=-90,delay=6)
+        self.move_to_position(e=115,b=90,delay=16)
+        self.set_light(100)
+        self.move_to_coordinates(x=250, y=0, z=250, delay=10)
+        self.set_light(0)
+
+    def do_action(self, action: str):
+        if action.lower() == '/turn_left':
+            self.move_left(15)
+        elif action.lower() == '/turn_right':
+            self.move_right(15)
+        elif action.lower() == '/go_up':
+            self.move_up(15)
+        elif action.lower() == '/go_down':
+            self.move_down(15)
+        elif action.lower() == '/light_on':
+            self.set_light(100)
+        elif action.lower() == '/light_off':
+            self.set_light(0)
+        elif action.lower() == '/look_around':
+            self.look_around()
+        else:
+            print('Invalid action')
 
 def main():
     speed = 10
