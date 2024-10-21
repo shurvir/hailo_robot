@@ -22,7 +22,7 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
         description="Detection Example - Tracker with ByteTrack and Supervision"
     )
     parser.add_argument(
-        "-n", "--net", help="Path for the HEF model.", default="../models/yolov7e6.hef"
+        "-n", "--net", help="Path for the HEF model.", default="../models/yolov10b.hef"
     )
     parser.add_argument(
         "-l", "--labels", default="../settings/coco.txt", help="Path to a text file containing labels."
@@ -144,7 +144,7 @@ def main() -> None:
 
     # Initialize picamera2
     picam2 = Picamera2()
-    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (1920, 1080)}))
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (1280, 1280)}))
     
     picam2.start()
     
@@ -154,6 +154,7 @@ def main() -> None:
 
         # flip image
         image = cv2.flip(image, 0)
+        image = cv2.flip(image, 1)
 
         # Preprocess the frame
         preprocessed_frame: np.ndarray = preprocess_frame(image, model_h, model_w)
@@ -179,6 +180,9 @@ def main() -> None:
             )
             # Display the resulting frame
             cv2.imshow(f'preview', annotated_labeled_frame)
+        else:
+            cv2.imshow(f'preview', image)
+
 
         # Break the loop if the 'q' key is pressed
         
