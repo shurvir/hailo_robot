@@ -11,7 +11,6 @@ from picamera2 import Picamera2
 
 camera_queue = None
 
-
 def preprocess_frame(frame: np.ndarray, model_h: int, model_w: int
 ) -> np.ndarray:
     """Preprocess the frame to match the model's input size."""
@@ -90,7 +89,7 @@ def postprocess_detections(
     annotated_labeled_frame: np.ndarray = label_annotator.annotate(
         scene=annotated_frame, detections=sv_detections, labels=labels
     )
-    return annotated_labeled_frame
+    return annotated_labeled_frame, sv_detections
 
 def run(hef_path: str, score_thresh: float = 0.5):
     input_queue: queue.Queue = queue.Queue()
@@ -149,7 +148,7 @@ def run(hef_path: str, score_thresh: float = 0.5):
         # Check if any detections were found
         if detections["num_detections"] > 0: 
             # Postprocess the detections and annotate the frame
-            annotated_labeled_frame: np.ndarray = postprocess_detections(
+            annotated_labeled_frame, sv_detections = postprocess_detections(
                 image, detections, class_names, tracker, box_annotator, label_annotator
             )
             # Display the resulting frame
@@ -157,7 +156,8 @@ def run(hef_path: str, score_thresh: float = 0.5):
             if camera_queue is not None:
                 while not camera_queue.empty():
                     camera_queue.get()
-                camera_queue.put(annotated_labeled_frame)
+                camera_queue.put({'image': annotated_labeled_frame, 
+                                  'detections': sv_detections})
         else:
             cv2.imshow(f'preview', image)
 

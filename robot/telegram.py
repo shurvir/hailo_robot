@@ -28,7 +28,7 @@ def do_action(message):
 @bot.message_handler(commands=['get_camera_metadata'])
 def send_camera_metadata(message):
     if camera_queue is not None:
-        camera_metadata = camera_queue.get()
+        camera_metadata = camera_queue.get()['image']
         img = Image.fromarray(camera_metadata)
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='PNG')  # or 'JPEG'
@@ -47,8 +47,6 @@ def voice_processing(message):
     # Get voice note
     file_info = bot.get_file(message.voice.file_id)
     downloaded_file = bot.download_file(file_info.file_path)
-    with open('/home/pi/Documents/hailo_robot/test_data/audio/new_file.ogg', 'wb') as new_file:
-        new_file.write(downloaded_file)
 
     # Get VN response
     prompt = "Transcribe this audio."
@@ -56,11 +54,11 @@ def voice_processing(message):
         prompt,
         {
             "mime_type": "audio/ogg",
-            "data": pathlib.Path('/home/pi/Documents/hailo_robot/test_data/audio/new_file.ogg').read_bytes()
+            "data": downloaded_file
         }
     ]).text
 
-    # respond
+    # Respond
     response = chat.send_message(transcription).text
     bot.send_message(message.chat.id, response)
     asyncio.run(say(response.replace('*','')))
