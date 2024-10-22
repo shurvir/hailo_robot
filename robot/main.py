@@ -30,7 +30,7 @@ def main() -> None:
     # Parse command-line arguments
     args = initialize_arg_parser().parse_args()
 
-    camera_queue: queue.Queue = queue.Queue()
+    camera_queue: queue.Queue = queue.Queue(maxsize=30)
     telegram.camera_queue = camera_queue
     camera_processor.camera_queue = camera_queue
 

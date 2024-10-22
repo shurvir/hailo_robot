@@ -154,7 +154,8 @@ def run(hef_path: str, score_thresh: float = 0.5):
             # Display the resulting frame
             cv2.imshow(f'preview', annotated_labeled_frame)
             if camera_queue is not None:
-                while not camera_queue.empty():
+                # Add to the queue
+                if camera_queue.full():
                     camera_queue.get()
                 camera_queue.put({'image': annotated_labeled_frame, 
                                   'detections': sv_detections})
