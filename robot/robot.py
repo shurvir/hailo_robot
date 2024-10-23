@@ -223,6 +223,9 @@ class Robot():
         self.move_to_coordinates(x=250, y=0, z=250, delay=10)
         self.set_light(0)
 
+    def move_to_pickup_start(self):
+        self.move_to_position(e=160,b=0,h=180,delay=1)
+
     def do_action(self, action: str):
         if action.lower() == '/turn_left':
             self.move_left(15)
@@ -246,17 +249,8 @@ def main():
     acceleration = 10
     robot = Robot(speed=speed, acceleration=acceleration)
     robot.reset()
-    time.sleep(2)
-    for i in range(5):
-        robot.set_light(100)
-        robot.move_to_position(e=60,b=90,h=180,delay=6)
-        robot.set_light(0)
-        robot.move_to_position(e=60,b=-90,delay=16)
-        robot.move_to_position(e=115,b=-90,delay=6)
-        robot.move_to_position(e=115,b=90,delay=16)
-        robot.set_light(100)
-        robot.move_to_coordinates(x=250, y=0, z=250, delay=10)
-        robot.set_light(0)
+    time.sleep(1)
+    robot.move_to_pickup_start()
 
 if __name__ == "__main__":
     main()

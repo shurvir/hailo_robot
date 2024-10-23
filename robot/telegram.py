@@ -6,12 +6,12 @@ import video_utils
 import os
 from tts import say
 import asyncio
-import robot
+from robot import Robot
 from PIL import Image
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-hailo_bot = robot.Robot(speed=10, acceleration=10)
+hailo_bot = Robot(speed=10, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 
