@@ -15,10 +15,10 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
         description="Detection Example - Tracker with ByteTrack and Supervision"
     )
     parser.add_argument(
-        "-n", "--net", help="Path for the HEF model.", default="../models/yolov10b.hef"
+        "-n", "--net", help="Path for the HEF model.", default="/home/pi/Documents/hailo_robot/models/yolov10b.hef"
     )
     parser.add_argument(
-        "-l", "--labels", default="../settings/coco.txt", help="Path to a text file containing labels."
+        "-l", "--labels", default="/home/pi/Documents/hailo_robot/settings", help="Path to a text file containing labels."
     )
     parser.add_argument(
         "-s", "--score_thresh", type=float, default=0.5, help="Score threshold - between 0 and 1."
@@ -30,7 +30,7 @@ def main() -> None:
     # Parse command-line arguments
     args = initialize_arg_parser().parse_args()
 
-    camera_queue: queue.Queue = queue.Queue(maxsize=180)
+    camera_queue: queue.Queue = queue.LifoQueue(maxsize=180)
     telegram.camera_queue = camera_queue
     camera_processor.camera_queue = camera_queue
 

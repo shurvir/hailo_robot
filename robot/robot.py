@@ -40,6 +40,7 @@ class Robot():
         self._state = self.get_state()
         self._speed = speed
         self._acceleration = acceleration
+        self.reset()
 
     def reset(self):
         """
@@ -224,7 +225,7 @@ class Robot():
         self.set_light(0)
 
     def move_to_pickup_start(self):
-        self.move_to_position(e=160,b=0,h=180,delay=1)
+        self.move_to_position(e=160,b=0,s=-40,h=180,delay=1)
 
     def do_action(self, action: str):
         if action.lower() == '/turn_left':
@@ -241,6 +242,8 @@ class Robot():
             self.set_light(0)
         elif action.lower() == '/look_around':
             self.look_around()
+        elif action.lower() == '/pickup_start':
+            self.move_to_pickup_start()
         else:
             print('Invalid action')
 
@@ -248,7 +251,6 @@ def main():
     speed = 10
     acceleration = 10
     robot = Robot(speed=speed, acceleration=acceleration)
-    robot.reset()
     time.sleep(1)
     robot.move_to_pickup_start()
 

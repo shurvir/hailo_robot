@@ -5,11 +5,18 @@ import queue
 from typing import Dict, List, Tuple
 import threading
 from utils import HailoAsyncInference
+import sys
+import math
 
 # Import picamera2 libraries
 from picamera2 import Picamera2
 
+def is_debugging():
+  """Checks if the Python script is running in debug mode."""
+  return sys.gettrace() is not None
+
 camera_queue = None
+class_names: List[str] = []
 
 def preprocess_frame(frame: np.ndarray, model_h: int, model_w: int
 ) -> np.ndarray:
@@ -91,6 +98,39 @@ def postprocess_detections(
     )
     return annotated_labeled_frame, sv_detections
 
+def get_coordinates_of_object(object_name: str, detection_results: sv.Detections) -> Tuple[int, int] | None:
+    """
+    Gets the coordinates of the top-left corner of the bounding box for the first detected object 
+    with the given name and confidence above 0.5.
+
+    Args:
+        object_name: The name of the object to find.
+        detection_results: The detection results containing bounding boxes and class IDs.
+
+    Returns:
+        A tuple containing the x and y coordinates of the top-left corner of the bounding box, 
+        or None if the object is not found.
+    """
+    try:
+        class_id = class_names.index(object_name)
+    except ValueError:
+        return None
+
+    for box, detection_class_id, confidence in zip(
+        detection_results.xyxy, detection_results.class_id, detection_results.confidence
+    ):
+        if detection_class_id == class_id and confidence > 0.5:
+            adjusted_x_image = 640 - (box[2] + box[0])/2.0
+            adjusted_y_image = (box[3] + box[1])/2.0
+
+            robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/128)))*225
+            robot_y = (adjusted_x_image/640.0)*225
+            robot_z = 0
+
+            return (robot_x, robot_y, robot_z)
+
+    return None
+    
 def run(hef_path: str, score_thresh: float = 0.5):
     input_queue: queue.Queue = queue.Queue()
     output_queue: queue.Queue = queue.Queue()
@@ -109,7 +149,8 @@ def run(hef_path: str, score_thresh: float = 0.5):
 
     # Load class names from the labels file
     with open('/home/pi/Documents/hailo_robot/settings/coco.txt', "r", encoding="utf-8") as f:
-        class_names: List[str] = f.read().splitlines()
+        global class_names
+        class_names = f.read().splitlines()
 
     # Start the asynchronous inference in a separate thread
     inference_thread: threading.Thread = threading.Thread(target=hailo_inference.run)
@@ -151,8 +192,12 @@ def run(hef_path: str, score_thresh: float = 0.5):
             annotated_labeled_frame, sv_detections = postprocess_detections(
                 image, detections, class_names, tracker, box_annotator, label_annotator
             )
+            
+            get_coordinates_of_object('teddy bear', sv_detections)
+
             # Display the resulting frame
-            cv2.imshow(f'preview', annotated_labeled_frame)
+            if not is_debugging():
+                cv2.imshow(f'preview', annotated_labeled_frame)
             if camera_queue is not None:
                 # Add to the queue
                 if camera_queue.full():
@@ -160,17 +205,19 @@ def run(hef_path: str, score_thresh: float = 0.5):
                 camera_queue.put({'image': annotated_labeled_frame, 
                                   'detections': sv_detections})
         else:
-            cv2.imshow(f'preview', image)
+            if not is_debugging():
+                cv2.imshow(f'preview', image)
 
         # Break the loop if the 'q' key is pressed
-        
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if not is_debugging():
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
     # Signal the inference thread to stop and wait for it to finish
     input_queue.put(None)
     inference_thread.join()
 
     # Cleanup
-    cv2.destroyAllWindows()
+    if not is_debugging():
+        cv2.destroyAllWindows()
     picam2.stop()
