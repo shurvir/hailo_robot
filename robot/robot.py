@@ -5,10 +5,6 @@ import json
 import time
 
 ROARM_IP = '192.168.182.245' # Static IP for now but need to figure out how to get this dynamic
-ACTIONS = ['turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 
-           'light_off', 'look_around', 'pickup_start', 'grab',
-           'reset']
-
 
 class Robot():
     """
@@ -32,7 +28,7 @@ class Robot():
                          'right':{'joint_letter': 'b', 'sign': -1, 'joint_index': 1}}
     
     ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 
-                'light_off', 'look_around', 'go_to', 'pickup_start', 'grab',
+                'light_off', 'look_around', 'pickup_start', 'grab',
                 'reset']
 
     def __init__(self, speed: int = 0, acceleration: int = 2) -> None:

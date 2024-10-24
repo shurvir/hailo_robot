@@ -17,7 +17,7 @@ hailo_bot = Robot(speed=10, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 
-@bot.message_handler(commands=['goto'])
+@bot.message_handler(commands=['go_to'])
 def go_to(message):
     camera_metadata = camera_queue.get()
     object_name = message.text.replace('/go_to','').strip()

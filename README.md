@@ -14,10 +14,11 @@ python main.py
 * Can be controlled via a web interface
 
 ## Requirements
-* Raspberry Pi with Hailo-8 chip
-* Python 3.7 or higher
-* Hailo runtime library
-* OpenCV
+* Raspberry Pi with Hailo-8L chip
+* Python 3.11 or higher
+* HailoRT runtime library
+* OpenCV - remember to use the raspbian version and DO NOT PIP install it
+
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.

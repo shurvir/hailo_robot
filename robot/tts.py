@@ -3,7 +3,7 @@ import sounddevice as sd
 from piper.voice import PiperVoice
 import asyncio
 
-model_path = "/home/pi/Documents/en_US-lessac-medium.onnx"  # Replace with the actual path
+model_path = "/home/pi/Documents/en_US-norman-medium.onnx"  # Replace with the actual path
 voice = PiperVoice.load(model_path)
 
 async def say(sentence: str):
