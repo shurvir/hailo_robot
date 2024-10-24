@@ -11,22 +11,24 @@ from robot import Robot
 from PIL import Image
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+ROBOT_COMMANDS = Robot.ACTIONS
 bot = telebot.TeleBot(BOT_TOKEN)
 hailo_bot = Robot(speed=10, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 
-@bot.message_handler(commands=['turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 'light_off', 'look_around', 'go_to', 'pickup_start'])
-def do_action(message):
-    if message.text.lower().split()[0] == '/go_to':
-        camera_metadata = camera_queue.get()
-        object_name = message.text.replace('/go_to','').strip()
-        coordinates = camera_processor.get_coordinates_of_object(object_name, camera_metadata['detections'])
-        print(coordinates)
-        if coordinates is not None:
-            hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2])
-    else:
-        hailo_bot.do_action(message.text)
+@bot.message_handler(commands=['goto'])
+def go_to(message):
+    camera_metadata = camera_queue.get()
+    object_name = message.text.replace('/go_to','').strip()
+    coordinates = camera_processor.get_coordinates_of_object(object_name, camera_metadata['detections'])
+    print(coordinates)
+    if coordinates is not None:
+        hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=2)
+
+@bot.message_handler(commands=ROBOT_COMMANDS)
+def do_robot_action(message):
+    hailo_bot.do_action(message.text)
 
 @bot.message_handler(commands=['get_camera_metadata'])
 def send_camera_metadata(message):

@@ -124,8 +124,8 @@ def get_coordinates_of_object(object_name: str, detection_results: sv.Detections
             adjusted_y_image = (box[3] + box[1])/2.0
 
             robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/128)))*225
-            robot_y = (adjusted_x_image/640.0)*225
-            robot_z = 0
+            robot_y = (adjusted_x_image/640.0)*350
+            robot_z = -100
 
             return (robot_x, robot_y, robot_z)
 

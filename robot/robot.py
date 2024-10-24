@@ -5,6 +5,10 @@ import json
 import time
 
 ROARM_IP = '192.168.182.245' # Static IP for now but need to figure out how to get this dynamic
+ACTIONS = ['turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 
+           'light_off', 'look_around', 'pickup_start', 'grab',
+           'reset']
+
 
 class Robot():
     """
@@ -26,6 +30,10 @@ class Robot():
                          'down': {'joint_letter': 'e', 'sign': +1, 'joint_index': 3},
                          'left': {'joint_letter': 'b', 'sign': +1, 'joint_index': 1},
                          'right':{'joint_letter': 'b', 'sign': -1, 'joint_index': 1}}
+    
+    ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 
+                'light_off', 'look_around', 'go_to', 'pickup_start', 'grab',
+                'reset']
 
     def __init__(self, speed: int = 0, acceleration: int = 2) -> None:
         """
@@ -213,39 +221,43 @@ class Robot():
         command = f'{{"T":114,"led":{intensity}}}'
         self.do(command)
 
+    def grab(self):
+        self.exact_move(4,180,delay=1)
+
     def look_around(self):
-        self.set_light(100)
         self.move_to_position(e=60,b=90,h=180,delay=6)
-        self.set_light(0)
         self.move_to_position(e=60,b=-90,delay=16)
         self.move_to_position(e=115,b=-90,delay=6)
         self.move_to_position(e=115,b=90,delay=16)
-        self.set_light(100)
         self.move_to_coordinates(x=250, y=0, z=250, delay=10)
-        self.set_light(0)
 
     def move_to_pickup_start(self):
         self.move_to_position(e=160,b=0,s=-40,h=180,delay=1)
 
     def do_action(self, action: str):
-        if action.lower() == '/turn_left':
-            self.move_left(15)
-        elif action.lower() == '/turn_right':
-            self.move_right(15)
-        elif action.lower() == '/go_up':
-            self.move_up(15)
-        elif action.lower() == '/go_down':
-            self.move_down(15)
-        elif action.lower() == '/light_on':
-            self.set_light(100)
-        elif action.lower() == '/light_off':
-            self.set_light(0)
-        elif action.lower() == '/look_around':
-            self.look_around()
-        elif action.lower() == '/pickup_start':
-            self.move_to_pickup_start()
-        else:
-            print('Invalid action')
+        match action.lower():
+            case '/turn_left':
+                self.move_left(15)
+            case '/turn_right':
+                self.move_right(15)
+            case '/go_up':
+                self.move_up(15)
+            case '/go_down':
+                self.move_down(15)
+            case '/light_on':
+                self.set_light(255)
+            case '/light_off':
+                self.set_light(0)
+            case '/look_around':
+                self.look_around()
+            case '/pickup_start':
+                self.move_to_pickup_start()
+            case '/grab':
+                self.grab()
+            case '/reset':
+                self.reset()
+            case _:
+                print('Invalid action')
 
 def main():
     speed = 10
