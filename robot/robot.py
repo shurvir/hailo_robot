@@ -29,7 +29,7 @@ class Robot():
     
     ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 
                 'light_off', 'look_around', 'pickup_start', 'grab',
-                'reset']
+                'reset', 'hold', 'release']
 
     def __init__(self, speed: int = 0, acceleration: int = 2) -> None:
         """
@@ -217,20 +217,61 @@ class Robot():
         command = f'{{"T":114,"led":{intensity}}}'
         self.do(command)
 
+    def hold(self):
+        """
+            Closes the robot grip
+        """
+        self.exact_move(4,220,delay=1)
+
     def grab(self):
-        self.exact_move(4,180,delay=1)
+        """
+            Opens and then closes the the robot grip
+        """
+        self.exact_move(4,90,delay=2)
+        self.exact_move(4,220,delay=1)
+
+    def release(self):
+        """
+            Opens the robot grip
+        """
+        self.exact_move(4,90,delay=2)
 
     def look_around(self):
+        """
+            Moves the robot to look around
+        """
         self.move_to_position(e=60,b=90,h=180,delay=6)
         self.move_to_position(e=60,b=-90,delay=16)
         self.move_to_position(e=115,b=-90,delay=6)
         self.move_to_position(e=115,b=90,delay=16)
         self.move_to_coordinates(x=250, y=0, z=250, delay=10)
 
+    def move_to_coordinates_for_pickup(self, x: int, y: int, z:int):
+        """
+            moves the robot into position for pickup
+
+            Args:
+                x (int): The x coordinate.
+                y (int): The y coordinate.
+                z (int): The z coordinate.
+        """
+        self.move_to_coordinates(x=x-50, y=y, z=z+200, t=1.5, delay=2)
+        self.move_to_coordinates(x=x, y=y, z=z, t=1.5, delay=2)
+        self.hold()
+
     def move_to_pickup_start(self):
-        self.move_to_position(e=160,b=0,s=-40,h=180,delay=1)
+        """
+            Moves the robot to the pickup start position
+        """
+        self.move_to_position(e=170,b=0,s=-40,delay=1)
 
     def do_action(self, action: str):
+        """
+            Performs an action on the robot.
+
+            Args:
+                action (str): The action to perform.
+        """
         match action.lower():
             case '/turn_left':
                 self.move_left(15)
@@ -252,6 +293,10 @@ class Robot():
                 self.grab()
             case '/reset':
                 self.reset()
+            case '/hold':
+                self.hold()
+            case '/release':
+                self.release()
             case _:
                 print('Invalid action')
 

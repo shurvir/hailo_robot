@@ -17,14 +17,14 @@ hailo_bot = Robot(speed=20, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 
-@bot.message_handler(commands=['go_to'])
+@bot.message_handler(commands=['pick_up'])
 def go_to(message):
     camera_metadata = camera_queue.get()
-    object_name = message.text.replace('/go_to','').strip()
+    object_name = message.text.replace('/pick_up','').strip()
     coordinates = camera_processor.get_coordinates_of_object(object_name, camera_metadata['detections'])
     print(coordinates)
     if coordinates is not None:
-        hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
+        hailo_bot.move_to_coordinates_for_pickup(x=coordinates[0], y=coordinates[1], z=coordinates[2])
 
 @bot.message_handler(commands=['find'])
 def go_to(message):
@@ -89,7 +89,6 @@ def echo_all(message):
     response = ai_chat_bot.send_message(message.text)
     bot.send_message(message.chat.id, response)
     asyncio.run(say(response.replace('*','')))
-    hailo_bot.do_action(response)
 
 @bot.message_handler(content_types=['voice','audio'])
 def voice_processing(message):
