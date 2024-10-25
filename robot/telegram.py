@@ -2,7 +2,7 @@ import os
 import telebot
 import io
 import ai_chat
-import video_utils
+import camera_utils
 import camera_processor
 import os
 from tts import say
@@ -13,7 +13,7 @@ from PIL import Image
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 ROBOT_COMMANDS = Robot.ACTIONS
 bot = telebot.TeleBot(BOT_TOKEN)
-hailo_bot = Robot(speed=10, acceleration=10)
+hailo_bot = Robot(speed=20, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 
@@ -24,7 +24,22 @@ def go_to(message):
     coordinates = camera_processor.get_coordinates_of_object(object_name, camera_metadata['detections'])
     print(coordinates)
     if coordinates is not None:
-        hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=2)
+        hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
+
+@bot.message_handler(commands=['find'])
+def go_to(message):
+    camera_metadata = camera_queue.get()['image']
+    object_name = message.text.replace('/find','').strip()
+    image_data = camera_utils.convert_array_image(camera_metadata, 'PNG')
+    prompt = f'What are the bounding box coordinates of the {object_name} in this image?'+ \
+        ' Given that the image is 1280x1280, return the coordinates in the form x1, y1, x2, y2.'
+    response = ai_chat_bot.generate_content(prompt=prompt,
+                                            mime_type='image/png', data=image_data)
+    y1, x1, y2, x2 = map(int, response.split(',')[0:4])
+    coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
+    camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
+    if coordinates is not None:
+        hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
 
 @bot.message_handler(commands=ROBOT_COMMANDS)
 def do_robot_action(message):
@@ -53,7 +68,7 @@ def send_camera_metadata(message):
         while not camera_queue.empty():
             image_array.insert(0, camera_queue.get()['image'])
         
-        video_data = video_utils.create_mp4_from_images(image_array)
+        video_data = camera_utils.create_mp4_from_images(image_array)
         video_data.seek(0)
         
         # Debug
@@ -63,7 +78,7 @@ def send_camera_metadata(message):
                 
         video_data.seek(0)
         # Get VN response
-        description =  ai_chat_bot.generate_content(prompt="Describe this video.", 
+        description =  ai_chat_bot.generate_content_from_video(prompt="Describe this video.", 
                                                     video_data=video_data.getvalue())
 
         bot.send_video(chat_id=message.chat.id, video=video_data)

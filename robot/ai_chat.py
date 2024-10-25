@@ -16,7 +16,7 @@ class AIChat():
     def generate_content(self, prompt, mime_type, data):
         pass
 
-    def generate_content(self, video_data, prompt):
+    def generate_content_from_video(self, video_data, prompt):
         pass
 
 
@@ -72,7 +72,7 @@ class GeminiChat(AIChat):
             }
         ]).text
     
-    def generate_content(self, video_data, prompt):
+    def generate_content_from_video(self, video_data, prompt):
         """
         Generates content using the model.
         

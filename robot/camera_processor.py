@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple
 import threading
 from utils import HailoAsyncInference
 import sys
-import math
+import camera_utils
 
 # Import picamera2 libraries
 from picamera2 import Picamera2
@@ -120,14 +120,7 @@ def get_coordinates_of_object(object_name: str, detection_results: sv.Detections
         detection_results.xyxy, detection_results.class_id, detection_results.confidence
     ):
         if detection_class_id == class_id and confidence > 0.5:
-            adjusted_x_image = 640 - (box[2] + box[0])/2.0
-            adjusted_y_image = (box[3] + box[1])/2.0
-
-            robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/128)))*225
-            robot_y = (adjusted_x_image/640.0)*350
-            robot_z = -100
-
-            return (robot_x, robot_y, robot_z)
+            return camera_utils.get_robot_coordinates_from_bbox(box)
 
     return None
     
