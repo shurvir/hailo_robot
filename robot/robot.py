@@ -1,5 +1,4 @@
 import requests
-import argparse
 import math
 import json
 import time

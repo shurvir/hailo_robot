@@ -2,7 +2,6 @@
 """Example module for Hailo Detection + ByteTrack + Supervision."""
 
 import argparse
-from typing import Dict, List, Tuple
 import camera_processor
 import controller
 import telegram
