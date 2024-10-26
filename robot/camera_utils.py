@@ -59,13 +59,15 @@ def convert_array_image(image_array, format):
 
     Returns:
         io.BytesIO: A BytesIO object containing the image data.
+        PIL.Image: The PIL Image object.
     
     """
-    img = Image.fromarray(image_array)
+    img_rgb = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB) 
+    img = Image.fromarray(img_rgb)
     img_byte_arr = io.BytesIO()
     img.save(img_byte_arr, format=format)  # 'PNG' or 'JPEG'
     img_byte_arr.seek(0)
-    return img_byte_arr.getvalue()
+    return img_byte_arr, img
 
 def create_mp4_from_images(images, fps=4):
   """Creates an MP4 video from a list of NumPy array images and returns it as a BytesIO Blob.

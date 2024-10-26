@@ -9,6 +9,7 @@ from tts import say
 import asyncio
 from robot import Robot
 from PIL import Image
+import cv2
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 ROBOT_COMMANDS = Robot.ACTIONS
@@ -38,11 +39,11 @@ def find_object(object_name: str):
             object_name (str): The name of the object to find.
     """
     camera_metadata = camera_queue.get()['image']
-    image_data = camera_utils.convert_array_image(camera_metadata, 'PNG')
+    image_byte_arr, _ = camera_utils.convert_array_image(camera_metadata, 'PNG')
     prompt = f'What are the bounding box coordinates of the {object_name} in this image?'+ \
         ' Given that the image is 1280x1280, return the coordinates in the form x1, y1, x2, y2.'
     response = ai_chat_bot.generate_content(prompt=prompt,
-                                            mime_type='image/png', data=image_data)
+                                            mime_type='image/png', data=image_byte_arr.getvalue())
     y1, x1, y2, x2 = map(int, response.split(',')[0:4])
     coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
     camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
@@ -55,10 +56,7 @@ def get_camera_metadata():
     """
     if camera_queue is not None:
         camera_metadata = camera_queue.get()['image']
-        img = Image.fromarray(camera_metadata)
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='PNG')  # or 'JPEG'
-        img_byte_arr.seek(0)
+        img_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'PNG')
         
         # Get VN response
         ai_chat_bot.send_message(img)
@@ -135,4 +133,4 @@ def send_action_to_robot(message):
         Args: 
             message (str): The action to send to the robot.
     """
-    hailo_bot.send_action(message)
+    hailo_bot.do_action(message)
