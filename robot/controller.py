@@ -18,6 +18,12 @@ ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 
 def pick_up_object(object_name: str):
+    """
+        Tells the robot to pick up the object input in the object_name parameter
+
+        Args: 
+            object_name (str): The name of the object to pick up.
+    """
     camera_metadata = camera_queue.get()
     coordinates = camera_processor.get_coordinates_of_object(object_name, camera_metadata['detections'])
     print(coordinates)
@@ -25,6 +31,12 @@ def pick_up_object(object_name: str):
         hailo_bot.move_to_coordinates_for_pickup(x=coordinates[0], y=coordinates[1], z=coordinates[2])
 
 def find_object(object_name: str):
+    """
+        Tell the AI bot to identify an object on the camera and pick up that object
+
+        Args: 
+            object_name (str): The name of the object to find.
+    """
     camera_metadata = camera_queue.get()['image']
     image_data = camera_utils.convert_array_image(camera_metadata, 'PNG')
     prompt = f'What are the bounding box coordinates of the {object_name} in this image?'+ \
@@ -38,6 +50,9 @@ def find_object(object_name: str):
         hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
 
 def get_camera_metadata():
+    """
+        Returns the camera metadata
+    """
     if camera_queue is not None:
         camera_metadata = camera_queue.get()['image']
         img = Image.fromarray(camera_metadata)
@@ -54,6 +69,9 @@ def get_camera_metadata():
         return None, None
 
 def describe_scene():
+    """
+        Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.
+    """
     if camera_queue is not None:
         image_array = []
         while not camera_queue.empty():
@@ -76,12 +94,30 @@ def describe_scene():
         return None, None
     
 def send_message_to_AI(message):
+    """
+        Sends a message to the AI chat bot and returns the response
+    
+        Args: 
+            message (str): The message to send to the AI chat bot.
+
+        Returns:
+            str: The response from the AI chat bot.
+    """
     response = ai_chat_bot.send_message(message)
     asyncio.run(say(response.replace('*','')))
 
     return response
 
 def process_audio(downloaded_file):
+    """
+        Processes an audio file and returns the response
+    
+        Args: 
+            downloaded_file (bytes): The audio file to process.
+
+        Returns:
+            str: The response from the AI chat bot.
+    """
      # Get VN response
     prompt = "Transcribe this audio."
     transcription = ai_chat_bot.generate_content(prompt=prompt, mime_type="audio/ogg", data=downloaded_file)
@@ -93,4 +129,10 @@ def process_audio(downloaded_file):
     return response
 
 def send_action_to_robot(message):
+    """
+        Sends an action to the robot
+    
+        Args: 
+            message (str): The action to send to the robot.
+    """
     hailo_bot.send_action(message)
