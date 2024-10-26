@@ -4,7 +4,7 @@
 import argparse
 from typing import Dict, List, Tuple
 import camera_processor
-import time
+import controller
 import telegram
 import threading
 import queue
@@ -31,18 +31,19 @@ def main() -> None:
     args = initialize_arg_parser().parse_args()
 
     camera_queue: queue.Queue = queue.LifoQueue(maxsize=180)
-    telegram.camera_queue = camera_queue
     camera_processor.camera_queue = camera_queue
+    controller.camera_queue = camera_queue
+
 
     # Start the telegram listener
-    telegram_thread: threading.Thread = threading.Thread(target=telegram.bot.infinity_polling)
+    telegram_thread: threading.Thread = threading.Thread(target=telegram.telegram_bot.infinity_polling)
     telegram_thread.start()
 
     # Start the camera listener
     camera_thread: threading.Thread = threading.Thread(target=camera_processor.run, args=(args.net, args.score_thresh))
     camera_thread.start()
 
-    telegram.bot.stop_polling()
+    telegram.telegram_bot.stop_polling()
     telegram_thread.join()
     camera_thread.join()
 
