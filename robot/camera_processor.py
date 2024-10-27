@@ -124,7 +124,7 @@ def get_coordinates_of_object(object_name: str, detection_results: sv.Detections
 
     return None
     
-def run(hef_path: str, score_thresh: float = 0.5):
+def run(hef_path: str, labels_path: str, score_thresh: float = 0.5):
     input_queue: queue.Queue = queue.Queue()
     output_queue: queue.Queue = queue.Queue()
 
@@ -141,7 +141,7 @@ def run(hef_path: str, score_thresh: float = 0.5):
     tracker = sv.ByteTrack()
 
     # Load class names from the labels file
-    with open('/home/pi/Documents/hailo_robot/settings/coco.txt', "r", encoding="utf-8") as f:
+    with open(labels_path, "r", encoding="utf-8") as f:
         global class_names
         class_names = f.read().splitlines()
 

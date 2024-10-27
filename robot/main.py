@@ -14,10 +14,10 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
         description="Detection Example - Tracker with ByteTrack and Supervision"
     )
     parser.add_argument(
-        "-n", "--net", help="Path for the HEF model.", default="/home/pi/Documents/hailo_robot/models/yolox_l_leaky.hef"
+        "-n", "--net", help="Path for the HEF model.", default="/home/pi/Documents/hailo_robot/models/yolov5s_personface_h8l.hef"
     )
     parser.add_argument(
-        "-l", "--labels", default="/home/pi/Documents/hailo_robot/settings", help="Path to a text file containing labels."
+        "-l", "--labels", default="/home/pi/Documents/hailo_robot/settings/person_face.txt", help="Path to a text file containing labels."
     )
     parser.add_argument(
         "-s", "--score_thresh", type=float, default=0.5, help="Score threshold - between 0 and 1."
@@ -39,7 +39,7 @@ def main() -> None:
     telegram_thread.start()
 
     # Start the camera listener
-    camera_thread: threading.Thread = threading.Thread(target=camera_processor.run, args=(args.net, args.score_thresh))
+    camera_thread: threading.Thread = threading.Thread(target=camera_processor.run, args=(args.net, args.labels, args.score_thresh))
     camera_thread.start()
 
     telegram.telegram_bot.stop_polling()

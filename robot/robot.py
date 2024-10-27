@@ -24,11 +24,13 @@ class Robot():
     _directions: dict = {'up':   {'joint_letter': 'e', 'sign': -1, 'joint_index': 3},
                          'down': {'joint_letter': 'e', 'sign': +1, 'joint_index': 3},
                          'left': {'joint_letter': 'b', 'sign': +1, 'joint_index': 1},
-                         'right':{'joint_letter': 'b', 'sign': -1, 'joint_index': 1}}
+                         'right':{'joint_letter': 'b', 'sign': -1, 'joint_index': 1},
+                         'forward': {'joint_letter': 's', 'sign': +1, 'joint_index': 2},
+                         'backward': {'joint_letter': 's', 'sign': -1, 'joint_index': 2}}
     
-    ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'light_on', 
-                'light_off', 'look_around', 'pickup_start', 'grab',
-                'reset', 'hold', 'release']
+    ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'go_forward',
+                'go_backward', 'light_on', 'light_off', 'look_around', 'pickup_start', 
+                'grab', 'reset', 'hold', 'release']
 
     def __init__(self, speed: int = 0, acceleration: int = 2) -> None:
         """
@@ -205,6 +207,25 @@ class Robot():
         """
         self.move(degrees, 'down', delay=delay)
 
+    def move_forward(self, degrees: int, delay: int = 0):
+        """
+            Moves the robot forward.
+
+            Args:
+                delay (int): The delay between commands.
+        """
+        self.move(degrees, 'forward', delay=delay)
+
+    def move_backward(self, degrees: int, delay:int = 0):
+        """
+            Moves the robot backward.
+
+            Args:
+                delay (int): The delay between commands.
+        """
+        self.move(degrees, 'backward', delay=delay)
+
+
     def set_light(self, intensity: int = 0):
         """
             Sets the light intensity of the robot.
@@ -254,7 +275,8 @@ class Robot():
                 y (int): The y coordinate.
                 z (int): The z coordinate.
         """
-        self.move_to_coordinates(x=x-50, y=y, z=z+200, t=1.5, delay=2)
+        self.move_to_coordinates(x=x/2, y=y, z=z+200, t=1.5, delay=4)
+        self.move_to_coordinates(x=x, y=y, z=z+100, t=1.5, delay=2)
         self.move_to_coordinates(x=x, y=y, z=z, t=1.5, delay=2)
         self.hold()
 
@@ -280,6 +302,10 @@ class Robot():
                 self.move_up(15)
             case '/go_down':
                 self.move_down(15)
+            case '/go_forward':
+                self.move_forward(15)
+            case '/go_backward':
+                self.move_backward(15)
             case '/light_on':
                 self.set_light(255)
             case '/light_off':

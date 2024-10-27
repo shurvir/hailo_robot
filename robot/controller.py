@@ -1,6 +1,5 @@
 import os
 import telebot
-import io
 import ai_chat
 import camera_utils
 import camera_processor
@@ -8,8 +7,6 @@ import os
 from tts import say
 import asyncio
 from robot import Robot
-from PIL import Image
-import cv2
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 ROBOT_COMMANDS = Robot.ACTIONS
@@ -30,6 +27,20 @@ def pick_up_object(object_name: str):
     print(coordinates)
     if coordinates is not None:
         hailo_bot.move_to_coordinates_for_pickup(x=coordinates[0], y=coordinates[1], z=coordinates[2])
+
+def drop_off_object(location: str):
+    """q
+        Tells the robot to drop off the object
+    """
+    hailo_bot.move_up(90,delay=3)
+    if location.lower() == 'left':
+        hailo_bot.move_to_coordinates(x=-100, y=600, z=200, delay=5)
+    elif location.lower() == 'right':
+        hailo_bot.move_to_coordinates(x=-100, y=-600, z=200, delay=5)
+    
+    hailo_bot.release()
+    hailo_bot.move_to_pickup_start()
+
 
 def find_object(object_name: str):
     """
@@ -91,30 +102,23 @@ def describe_scene():
     else:
         return None, None
     
-def send_message_to_AI(message):
+def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Sends a message to the AI chat bot and returns the response
     
         Args: 
             message (str): The message to send to the AI chat bot.
-
-        Returns:
-            str: The response from the AI chat bot.
     """
     response = ai_chat_bot.send_message(message)
+    telegram_bot.send_message(chat_id, response)
     asyncio.run(say(response.replace('*','')))
 
-    return response
-
-def process_audio(downloaded_file):
+def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Processes an audio file and returns the response
     
         Args: 
             downloaded_file (bytes): The audio file to process.
-
-        Returns:
-            str: The response from the AI chat bot.
     """
      # Get VN response
     prompt = "Transcribe this audio."
@@ -122,9 +126,9 @@ def process_audio(downloaded_file):
 
     # Respond
     response = ai_chat_bot.send_message(transcription)
+     # Send response to the chat
+    telegram_bot.send_message(chat_id, response)
     asyncio.run(say(response.replace('*','')))
-
-    return response
 
 def send_action_to_robot(message):
     """

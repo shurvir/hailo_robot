@@ -3,6 +3,7 @@ import telebot
 import os
 from robot import Robot
 import controller
+import asyncio
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 ROBOT_COMMANDS = Robot.ACTIONS
@@ -12,6 +13,9 @@ telegram_bot = telebot.TeleBot(BOT_TOKEN)
 def go_to(message):
     controller.pick_up_object(message.text.replace('/pick_up','').strip())
 
+@telegram_bot.message_handler(commands=['drop_off'])
+def go_to(message):
+    controller.drop_off_object(message.text.replace('/drop_off','').strip())
 
 @telegram_bot.message_handler(commands=['find'])
 def go_to(message):
@@ -37,8 +41,7 @@ def send_camera_metadata(message):
 
 @telegram_bot.message_handler(content_types=['text'])
 def echo_all(message):
-    response = controller.send_message_to_AI(message.text)
-    telegram_bot.send_message(message.chat.id, response)
+    controller.send_message_to_AI(message.text, telegram_bot, message.chat.id)
 
 @telegram_bot.message_handler(content_types=['voice','audio'])
 def voice_processing(message):
@@ -47,10 +50,7 @@ def voice_processing(message):
     downloaded_file = telegram_bot.download_file(file_info.file_path)
 
     # Send voice note to gemini for processing
-    response = controller.process_audio(downloaded_file)
-
-    # Send response to the chat
-    telegram_bot.send_message(message.chat.id, response)
+    controller.process_audio(downloaded_file, telegram_bot, message.chat.id)
 
 if __name__ == '__main__':
     telegram_bot.infinity_polling()

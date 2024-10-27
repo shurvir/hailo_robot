@@ -6,7 +6,7 @@ import asyncio
 model_path = "/home/pi/Documents/en_US-norman-medium.onnx"  # Replace with the actual path
 voice = PiperVoice.load(model_path)
 
-async def say(sentence: str):
+async def text_to_speech(sentence: str):
     stream = sd.OutputStream(
         samplerate=voice.config.sample_rate,  # Match the model's sample rate
         channels=1,  # Mono audio
@@ -21,5 +21,8 @@ async def say(sentence: str):
     stream.stop()
     stream.close()
 
+async def say(sentence: str):
+    task = asyncio.create_task(text_to_speech(sentence))
+    
 if __name__ == "__main__":
     asyncio.run(say("What you talking about... sucker"))
