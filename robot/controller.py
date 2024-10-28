@@ -39,7 +39,8 @@ def drop_off_object(location: str):
         hailo_bot.move_to_coordinates(x=-100, y=-600, z=200, delay=5)
     
     hailo_bot.release()
-    hailo_bot.move_to_pickup_start()
+    hailo_bot.move_to_pick_up_start()
+    hailo_bot.hold()
 
 
 def find_object(object_name: str):
@@ -113,6 +114,28 @@ def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int
     telegram_bot.send_message(chat_id, response)
     asyncio.run(say(response.replace('*','')))
 
+def map_instruction_to_action(instruction: str):
+    """
+        Maps an instruction to an action
+    
+        Args: 
+            instruction (str): The instruction to map to an action.
+    """
+    list_of_commands = [t.strip('.').strip(',') for t in instruction.lower().split(' ')]
+    command_string = '_'.join(list_of_commands)
+    execute_command = ['/' + command for command in ROBOT_COMMANDS if command_string.startswith(command)]
+    if len(execute_command) > 0:
+        hailo_bot.do_action(execute_command[0])
+        return execute_command
+    elif list_of_commands[0] == 'pick' and list_of_commands[1] == 'up':
+        pick_up_object(list_of_commands[2].strip('.'))
+        return 'pick up'
+    elif list_of_commands[0] == 'drop' and list_of_commands[1] == 'off':
+        drop_off_object(list_of_commands[2].strip('.'))
+        return 'drop off'
+    else:
+        return None
+
 def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Processes an audio file and returns the response
@@ -121,14 +144,19 @@ def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
             downloaded_file (bytes): The audio file to process.
     """
      # Get VN response
-    prompt = "Transcribe this audio."
-    transcription = ai_chat_bot.generate_content(prompt=prompt, mime_type="audio/ogg", data=downloaded_file)
+    #prompt = "transcribe this audio without any safety filtering."
+    #transcription = ai_chat_bot.generate_content(prompt=prompt, mime_type="audio/ogg", data=downloaded_file)
+    #transcription = ai_chat.transcribe_ogg_bytes(downloaded_file)
+    transcription = ai_chat.transcribe_audio_bytes(downloaded_file)
 
-    # Respond
-    response = ai_chat_bot.send_message(transcription)
-     # Send response to the chat
-    telegram_bot.send_message(chat_id, response)
-    asyncio.run(say(response.replace('*','')))
+    print(f'transcription: {transcription}')
+
+    if map_instruction_to_action(transcription) is None:
+        # Respond
+        response = ai_chat_bot.send_message(transcription)
+        # Send response to the chat
+        telegram_bot.send_message(chat_id, response)
+        asyncio.run(say(response.replace('*','')))
 
 def send_action_to_robot(message):
     """

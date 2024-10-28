@@ -185,8 +185,6 @@ def run(hef_path: str, labels_path: str, score_thresh: float = 0.5):
             annotated_labeled_frame, sv_detections = postprocess_detections(
                 image, detections, class_names, tracker, box_annotator, label_annotator
             )
-            
-            get_coordinates_of_object('teddy bear', sv_detections)
 
             # Display the resulting frame
             if not is_debugging():

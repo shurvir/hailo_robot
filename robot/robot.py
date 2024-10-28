@@ -29,7 +29,7 @@ class Robot():
                          'backward': {'joint_letter': 's', 'sign': -1, 'joint_index': 2}}
     
     ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'go_forward',
-                'go_backward', 'light_on', 'light_off', 'look_around', 'pickup_start', 
+                'go_backward', 'light_on', 'light_off', 'look_around', 'pick_up_start', 
                 'grab', 'reset', 'hold', 'release']
 
     def __init__(self, speed: int = 0, acceleration: int = 2) -> None:
@@ -77,7 +77,7 @@ class Robot():
         content = response.text
         return content
     
-    def move_to_coordinates(self, x:int = None, y:int = None, z:int = None, t:int = None, delay:int = 0):
+    def move_to_coordinates(self, x:int = None, y:int = None, z:int = None, t:int = None, speed:int = None, delay:int = 0):
         """
             Moves the robot to a specific position.
 
@@ -100,7 +100,9 @@ class Robot():
             z = self._state['z']
         if t is None:
             t = self._state['t']
-        command = f'{{"T":104,"x":{x},"y":{y},"z":{z},"t":{t},"spd":{self._speed}}}'
+        if speed is None:
+            speed = self._speed
+        command = f'{{"T":104,"x":{x},"y":{y},"z":{z},"t":{t},"spd":{speed}}}'
         self.do(command)
         time.sleep(delay)
     
@@ -276,11 +278,13 @@ class Robot():
                 z (int): The z coordinate.
         """
         self.move_to_coordinates(x=x/2, y=y, z=z+200, t=1.5, delay=4)
-        self.move_to_coordinates(x=x, y=y, z=z+100, t=1.5, delay=2)
-        self.move_to_coordinates(x=x, y=y, z=z, t=1.5, delay=2)
+        if y < 0:
+            self.move_to_coordinates(x=x+10, y=y+30, z=z, t=2, speed=1, delay=4)
+        else:
+            self.move_to_coordinates(x=x+10, y=y-30, z=z, t=2, speed=1, delay=4)
         self.hold()
 
-    def move_to_pickup_start(self):
+    def move_to_pick_up_start(self):
         """
             Moves the robot to the pickup start position
         """
@@ -312,8 +316,8 @@ class Robot():
                 self.set_light(0)
             case '/look_around':
                 self.look_around()
-            case '/pickup_start':
-                self.move_to_pickup_start()
+            case '/pick_up_start':
+                self.move_to_pick_up_start()
             case '/grab':
                 self.grab()
             case '/reset':
@@ -330,7 +334,7 @@ def main():
     acceleration = 10
     robot = Robot(speed=speed, acceleration=acceleration)
     time.sleep(1)
-    robot.move_to_pickup_start()
+    robot.move_to_pick_up_start()
 
 if __name__ == "__main__":
     main()

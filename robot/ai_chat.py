@@ -1,9 +1,68 @@
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import tempfile
 import os
 import time
+import whisper
+from google.cloud import speech
 
+model = whisper.load_model("base")  # Choose your model size (tiny, base, small, medium, large)
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
+def transcribe_ogg_bytes(audio_bytes):
+    """
+    Transcribes Ogg Opus audio bytes using OpenAI's Whisper.
+
+    Args:
+    audio_bytes: The Ogg Opus audio bytes.
+
+    Returns:
+    The transcribed text.
+    """
+
+    # Load the Whisper model
+    model = whisper.load_model("base.en")  # You can choose a different model size
+
+    with tempfile.NamedTemporaryFile(suffix=".ogg", delete=False) as temp_file:
+        temp_filename = temp_file.name
+        temp_file.write(audio_bytes)
+        temp_file.close()
+
+    # Transcribe the audio
+    result = model.transcribe(temp_filename, fp16=False)  # fp16=False for CPU
+
+    return result["text"]
+
+def transcribe_audio_bytes(audio_bytes, language_code="en-US"):
+  """
+  Transcribes audio bytes using Google Cloud Speech-to-Text.
+
+  Args:
+    audio_bytes: The audio bytes to transcribe.
+    language_code: The language of the audio (e.g., "en-US", "es-ES").
+
+  Returns:
+    The transcribed text.
+  """
+
+  client = speech.SpeechClient()
+
+  audio = speech.RecognitionAudio(content=audio_bytes)
+  config = speech.RecognitionConfig(
+      encoding=speech.RecognitionConfig.AudioEncoding.OGG_OPUS,
+
+      sample_rate_hertz=48000,  # Adjust if necessary
+      language_code=language_code,
+  )
+
+  response = client.recognize(config=config, audio=audio)
+
+  transcription = ""
+  for result in response.results:
+    transcription += result.alternatives[0].transcript
+
+  return transcription
+
 
 class AIChat():
     
@@ -37,7 +96,7 @@ class GeminiChat(AIChat):
         Initializes a new instance of the GeminiChat class.
         """
         genai.configure(api_key=GEMINI_API_KEY)
-        self._model = genai.GenerativeModel("gemini-1.5-flash")
+        self._model = genai.GenerativeModel("gemini-1.5-pro")
         self._chat = self._model.start_chat()
     
     def send_message(self, message: str):
@@ -64,13 +123,15 @@ class GeminiChat(AIChat):
         Returns:
             str: The response from the model.
         """
-        return self._model.generate_content([
+        response = self._model.generate_content([
             prompt,
             {
                 "mime_type": mime_type,
                 "data": data
             }
-        ]).text
+        ])
+
+        return response.text
     
     def generate_content_from_video(self, video_data, prompt):
         """

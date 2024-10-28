@@ -17,9 +17,11 @@ def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int]:
     adjusted_x_image = 640 - (bbox[2] + bbox[0])/2.0
     adjusted_y_image = (bbox[3] + bbox[1])/2.0
 
-    robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/128)))*225 -150
+    print(f'adjusted_x: {adjusted_x_image}, adjusted_y: {adjusted_y_image}')
+    robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/256)))*275
     robot_y = (adjusted_x_image/640.0)*350
-    robot_z = -100
+    print(f'robot_x: {robot_x}, robot_y: {robot_y}')
+    robot_z = -75
 
     return (robot_x, robot_y, robot_z)
 
