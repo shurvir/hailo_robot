@@ -78,7 +78,7 @@ def get_camera_metadata():
     else:
         return None, None
 
-def describe_scene():
+def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.
     """
@@ -99,9 +99,9 @@ def describe_scene():
         # Get VN response
         description =  ai_chat_bot.generate_content_from_video(prompt="Describe this video.", 
                                                     video_data=video_data.getvalue())
-        return video_data, description
-    else:
-        return None, None
+        if video_data is not None:
+            telegram_bot.send_video(chat_id=chat_id, video=video_data)
+            telegram_bot.send_message(chat_id, description)
     
 def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
@@ -114,7 +114,7 @@ def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int
     telegram_bot.send_message(chat_id, response)
     asyncio.run(say(response.replace('*','')))
 
-def map_instruction_to_action(instruction: str):
+def map_instruction_to_action(instruction: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Maps an instruction to an action
     
@@ -127,12 +127,17 @@ def map_instruction_to_action(instruction: str):
     if len(execute_command) > 0:
         hailo_bot.do_action(execute_command[0])
         return execute_command
+    elif len(list_of_commands) < 2:
+        return None
     elif list_of_commands[0] == 'pick' and list_of_commands[1] == 'up':
         pick_up_object(list_of_commands[2].strip('.'))
         return 'pick up'
     elif list_of_commands[0] == 'drop' and list_of_commands[1] == 'off':
         drop_off_object(list_of_commands[2].strip('.'))
         return 'drop off'
+    elif list_of_commands[0] == 'describe' and list_of_commands[1] == 'scene':
+        describe_scene(telegram_bot, chat_id)
+        return 'describe scene'
     else:
         return None
 
@@ -151,7 +156,7 @@ def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
 
     print(f'transcription: {transcription}')
 
-    if map_instruction_to_action(transcription) is None:
+    if map_instruction_to_action(transcription, telegram_bot, chat_id) is None:
         # Respond
         response = ai_chat_bot.send_message(transcription)
         # Send response to the chat

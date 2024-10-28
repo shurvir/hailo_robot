@@ -34,11 +34,8 @@ def send_camera_metadata(message):
 
 @telegram_bot.message_handler(commands=['describe_scene'])
 def send_camera_metadata(message):
-    video_data, description = controller.describe_scene()
-    if video_data is not None:
-        telegram_bot.send_video(chat_id=message.chat.id, video=video_data)
-        telegram_bot.send_message(message.chat.id, description)
-
+    controller.describe_scene(telegram_bot, message.chat.id)
+    
 @telegram_bot.message_handler(content_types=['text'])
 def echo_all(message):
     controller.send_message_to_AI(message.text, telegram_bot, message.chat.id)

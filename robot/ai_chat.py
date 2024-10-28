@@ -3,35 +3,9 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import tempfile
 import os
 import time
-import whisper
 from google.cloud import speech
 
-model = whisper.load_model("base")  # Choose your model size (tiny, base, small, medium, large)
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-
-def transcribe_ogg_bytes(audio_bytes):
-    """
-    Transcribes Ogg Opus audio bytes using OpenAI's Whisper.
-
-    Args:
-    audio_bytes: The Ogg Opus audio bytes.
-
-    Returns:
-    The transcribed text.
-    """
-
-    # Load the Whisper model
-    model = whisper.load_model("base.en")  # You can choose a different model size
-
-    with tempfile.NamedTemporaryFile(suffix=".ogg", delete=False) as temp_file:
-        temp_filename = temp_file.name
-        temp_file.write(audio_bytes)
-        temp_file.close()
-
-    # Transcribe the audio
-    result = model.transcribe(temp_filename, fp16=False)  # fp16=False for CPU
-
-    return result["text"]
 
 def transcribe_audio_bytes(audio_bytes, language_code="en-US"):
   """
