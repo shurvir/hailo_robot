@@ -27,11 +27,8 @@ def do_robot_action(message):
 
 @telegram_bot.message_handler(commands=['get_camera_metadata'])
 def send_camera_metadata(message):
-    img_byte_arr, description = controller.get_camera_metadata()
-    if img_byte_arr is not None:
-        telegram_bot.send_photo(chat_id=message.chat.id, photo=img_byte_arr)
-        telegram_bot.send_message(message.chat.id, description)
-
+    controller.get_camera_metadata()
+        
 @telegram_bot.message_handler(commands=['describe_scene'])
 def send_camera_metadata(message):
     controller.describe_scene(telegram_bot, message.chat.id)

@@ -71,7 +71,23 @@ class GeminiChat(AIChat):
         """
         genai.configure(api_key=GEMINI_API_KEY)
         self._model = genai.GenerativeModel("gemini-1.5-pro")
-        self._chat = self._model.start_chat()
+
+        # Define the chat context
+        context = [
+            genai.ChatMessage(
+                role=genai.ChatMessageRole.USER,
+                content="""I want you to behave as though you are a robot arm with audio visual capabilities. 
+                Your text output is played into my living area via Speech to Text. Your name is Sharkie.
+                """,
+            ),
+            genai.ChatMessage(
+                role=genai.ChatMessageRole.MODEL,
+                content="Sure, I understand.",
+            ),
+        ]
+
+        # Start a chat session with the context
+        self._chat = self._model.start_chat(history=context)
     
     def send_message(self, message: str):
         """

@@ -62,7 +62,7 @@ def find_object(object_name: str):
     if coordinates is not None:
         hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
 
-def get_camera_metadata():
+def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Returns the camera metadata
     """
@@ -74,9 +74,8 @@ def get_camera_metadata():
         ai_chat_bot.send_message(img)
         description = ai_chat_bot.send_message("Describe this image.")
 
-        return img_byte_arr, description
-    else:
-        return None, None
+        telegram_bot.send_photo(chat_id, photo=img_byte_arr)
+        telegram_bot.send_message(chat_id, description)
 
 def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
     """
@@ -121,23 +120,24 @@ def map_instruction_to_action(instruction: str, telegram_bot: telebot.TeleBot, c
         Args: 
             instruction (str): The instruction to map to an action.
     """
+
     list_of_commands = [t.strip('.').strip(',') for t in instruction.lower().split(' ')]
     command_string = '_'.join(list_of_commands)
-    execute_command = ['/' + command for command in ROBOT_COMMANDS if command_string.startswith(command)]
-    if len(execute_command) > 0:
-        hailo_bot.do_action(execute_command[0])
-        return execute_command
-    elif len(list_of_commands) < 2:
-        return None
-    elif list_of_commands[0] == 'pick' and list_of_commands[1] == 'up':
+    if command_string in ROBOT_COMMANDS:
+        hailo_bot.do_action('/'+ command_string)
+        return command_string
+    elif command_string.startswith('pick_up') and len(list_of_commands) > 2:
         pick_up_object(list_of_commands[2].strip('.'))
         return 'pick up'
-    elif list_of_commands[0] == 'drop' and list_of_commands[1] == 'off':
+    elif command_string.startswith('drop_off') and len(list_of_commands) > 2:
         drop_off_object(list_of_commands[2].strip('.'))
         return 'drop off'
-    elif list_of_commands[0] == 'describe' and list_of_commands[1] == 'scene':
+    elif command_string == 'describe_scene':
         describe_scene(telegram_bot, chat_id)
         return 'describe scene'
+    elif command_string == 'get_camera_metadata':
+        get_camera_metadata(telegram_bot, chat_id)
+        return 'get camera metadata'
     else:
         return None
 
