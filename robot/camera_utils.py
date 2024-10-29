@@ -14,12 +14,14 @@ def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int]:
     Args:
         bbox: 
     """
-    adjusted_x_image = 640 - (bbox[2] + bbox[0])/2.0
-    adjusted_y_image = (bbox[3] + bbox[1])/2.0
+    adjusted_x_image = (bbox[2] + bbox[0])/2.0
+    adjusted_y_image = bbox[3]
 
-    print(f'adjusted_x: {adjusted_x_image}, adjusted_y: {adjusted_y_image}')
-    robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/256)))*275
-    robot_y = (adjusted_x_image/640.0)*350
+    #print(f'adjusted_x: {adjusted_x_image}, adjusted_y: {adjusted_y_image}')
+    #robot_x = (1 / math.cos(math.radians((1280 - adjusted_y_image)*9/256)))*275
+    #robot_y = (adjusted_x_image/640.0)*350
+    robot_x = -0.5543*adjusted_y_image + 578
+    robot_y = -0.3832*adjusted_x_image + 250
     print(f'robot_x: {robot_x}, robot_y: {robot_y}')
     robot_z = -75
 
@@ -71,7 +73,7 @@ def convert_array_image(image_array, format):
     img_byte_arr.seek(0)
     return img_byte_arr, img
 
-def create_mp4_from_images(images, fps=4):
+def create_mp4_from_images(images, fps=10):
   """Creates an MP4 video from a list of NumPy array images and returns it as a BytesIO Blob.
 
   Args:

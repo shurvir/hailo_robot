@@ -29,10 +29,12 @@ def main() -> None:
     # Parse command-line arguments
     args = initialize_arg_parser().parse_args()
 
-    camera_queue: queue.Queue = queue.LifoQueue(maxsize=180)
+    camera_queue: queue.Queue = queue.LifoQueue(maxsize=1)
+    video_queue: queue.Queue = queue.Queue(maxsize=300)
     camera_processor.camera_queue = camera_queue
+    camera_processor.video_queue = video_queue
     controller.camera_queue = camera_queue
-
+    controller.video_queue = video_queue
 
     # Start the telegram listener
     telegram_thread: threading.Thread = threading.Thread(target=telegram.telegram_bot.infinity_polling)

@@ -74,16 +74,11 @@ class GeminiChat(AIChat):
 
         # Define the chat context
         context = [
-            genai.ChatMessage(
-                role=genai.ChatMessageRole.USER,
-                content="""I want you to behave as though you are a robot arm with audio visual capabilities. 
-                Your text output is played into my living area via Speech to Text. Your name is Sharkie.
-                """,
-            ),
-            genai.ChatMessage(
-                role=genai.ChatMessageRole.MODEL,
-                content="Sure, I understand.",
-            ),
+            {"role": "user", "parts": ["I want you to behave as though you are a robot arm with audio visual capabilities.",
+                                       "Your text output is played into my living area via Speech to Text.",
+                                       "Your name is Sharkie.",
+                                       "Have a serious tone and don't make robot noises."]},
+            {"role": "model", "parts": "Sure, I understand."},
         ]
 
         # Start a chat session with the context
@@ -99,7 +94,9 @@ class GeminiChat(AIChat):
         Returns:
             str: The response from the chat.
         """
-        return self._chat.send_message(message).text
+        response = self._chat.send_message(message)
+        output_message = response.text
+        return output_message
     
     def generate_content(self, prompt, mime_type, data):
         """
@@ -135,7 +132,7 @@ class GeminiChat(AIChat):
             str: The response from the model.
         """
         video_file = self.upload_bytes_as_video_file(video_data, 'video.mp4')
-        response = self._model.generate_content([video_file, prompt], request_options={"timeout": 600})
+        response = self._model.generate_content([video_file, prompt], request_options={"timeout": 1800})
         return response.text
     
     def upload_bytes_as_video_file(self, bytes_data, display_name):

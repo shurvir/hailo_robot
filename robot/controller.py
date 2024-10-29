@@ -14,6 +14,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 hailo_bot = Robot(speed=20, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
+video_queue = None
 
 def pick_up_object(object_name: str):
     """
@@ -37,6 +38,8 @@ def drop_off_object(location: str):
         hailo_bot.move_to_coordinates(x=-100, y=600, z=200, delay=5)
     elif location.lower() == 'right':
         hailo_bot.move_to_coordinates(x=-100, y=-600, z=200, delay=5)
+    elif location.lower() == 'behind':
+        hailo_bot.move_to_coordinates(x=-600, y=0, z=200, delay=8)
     
     hailo_bot.release()
     hailo_bot.move_to_pick_up_start()
@@ -81,10 +84,10 @@ def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.
     """
-    if camera_queue is not None:
+    if video_queue is not None:
         image_array = []
-        while not camera_queue.empty():
-            image_array.insert(0, camera_queue.get()['image'])
+        while not video_queue.empty():
+            image_array.append(video_queue.get()['image'])
         
         video_data = camera_utils.create_mp4_from_images(image_array)
         video_data.seek(0)
@@ -94,7 +97,6 @@ def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
         #    with open('/home/pi/Desktop/my_video.mp4', 'wb') as f:
         #        f.write(video_data.getbuffer())
                 
-        video_data.seek(0)
         # Get VN response
         description =  ai_chat_bot.generate_content_from_video(prompt="Describe this video.", 
                                                     video_data=video_data.getvalue())

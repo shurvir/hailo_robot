@@ -30,7 +30,7 @@ class Robot():
     
     ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'go_forward',
                 'go_backward', 'light_on', 'light_off', 'look_around', 'pick_up_start', 
-                'grab', 'reset', 'hold', 'release']
+                'grab', 'reset', 'hold', 'release', 'throw']
 
     def __init__(self, speed: int = 0, acceleration: int = 2) -> None:
         """
@@ -77,7 +77,7 @@ class Robot():
         content = response.text
         return content
     
-    def move_to_coordinates(self, x:int = None, y:int = None, z:int = None, t:int = None, speed:int = None, delay:int = 0):
+    def move_to_coordinates(self, x:int = None, y:int = None, z:int = None, t:int = None, speed:int = None, delay:float = 0):
         """
             Moves the robot to a specific position.
 
@@ -106,7 +106,7 @@ class Robot():
         self.do(command)
         time.sleep(delay)
     
-    def move_to_position(self, e:int = None, b:int = None, s:int = None, h:int = None, delay:int = 0):
+    def move_to_position(self, e:int = None, b:int = None, s:int = None, h:int = None, speed:int = None, delay:float = 0):
         """
             Moves the robot to a specific position.
 
@@ -129,11 +129,13 @@ class Robot():
             s = math.degrees(self._state['s'])
         if h is None:
             h = math.degrees(self._state['t'])
-        command = f'{{"T":122,"b":{b},"s":{s},"e":{e},"h":{h},"spd":{self._speed},"acc":{self._acceleration}}}'
+        if speed is None:
+            speed = self._speed
+        command = f'{{"T":122,"b":{b},"s":{s},"e":{e},"h":{h},"spd":{speed},"acc":{self._acceleration}}}'
         self.do(command)
         time.sleep(delay)
         
-    def exact_move(self, joint_index: int, degrees: int, delay: int = 0):
+    def exact_move(self, joint_index: int, degrees: int, delay: float = 0):
         """
             Moves the robot to a specific position.
 
@@ -149,7 +151,7 @@ class Robot():
         self.do(command)
         time.sleep(delay)
 
-    def move(self, degrees: int, direction: str, delay: int = 0):
+    def move(self, degrees: int, direction: str, delay: float = 0):
         """
             Moves the robot in a specific direction.
 
@@ -169,7 +171,7 @@ class Robot():
         self.exact_move(joint_index, adjusted_degrees, delay=delay)
 
 
-    def move_left(self, degrees: int, delay: int = 0):
+    def move_left(self, degrees: int, delay: float = 0):
         """
             Moves the robot to the left.
 
@@ -179,7 +181,7 @@ class Robot():
         """
         self.move(degrees, 'left', delay=delay)
 
-    def move_right(self, degrees: int, delay: int = 0):
+    def move_right(self, degrees: int, delay: float = 0):
         """
             Moves the robot to the right.
 
@@ -189,7 +191,7 @@ class Robot():
         """
         self.move(degrees, 'right', delay=delay)
 
-    def move_up(self, degrees: int, delay: int = 0):
+    def move_up(self, degrees: int, delay: float = 0):
         """
             Moves the robot up.
 
@@ -199,7 +201,7 @@ class Robot():
         """
         self.move(degrees, 'up', delay=delay)
 
-    def move_down(self, degrees: int, delay: int = 0):
+    def move_down(self, degrees: int, delay: float = 0):
         """
             Moves the robot down.
 
@@ -209,7 +211,7 @@ class Robot():
         """
         self.move(degrees, 'down', delay=delay)
 
-    def move_forward(self, degrees: int, delay: int = 0):
+    def move_forward(self, degrees: int, delay: float = 0):
         """
             Moves the robot forward.
 
@@ -218,7 +220,7 @@ class Robot():
         """
         self.move(degrees, 'forward', delay=delay)
 
-    def move_backward(self, degrees: int, delay:int = 0):
+    def move_backward(self, degrees: int, delay:float = 0):
         """
             Moves the robot backward.
 
@@ -249,7 +251,7 @@ class Robot():
         """
             Opens and then closes the the robot grip
         """
-        self.exact_move(4,90,delay=2)
+        self.exact_move(4,45,delay=5)
         self.exact_move(4,220,delay=1)
 
     def release(self):
@@ -262,10 +264,10 @@ class Robot():
         """
             Moves the robot to look around
         """
-        self.move_to_position(e=60,b=90,h=180,delay=6)
-        self.move_to_position(e=60,b=-90,delay=16)
-        self.move_to_position(e=115,b=-90,delay=6)
-        self.move_to_position(e=115,b=90,delay=16)
+        self.move_to_position(e=80,b=60,h=180,delay=4)
+        self.move_to_position(e=80,b=-60,delay=10)
+        self.move_to_position(e=120,b=-60,delay=4)
+        self.move_to_position(e=120,b=60,delay=10)
         self.move_to_coordinates(x=250, y=0, z=250, delay=10)
 
     def move_to_coordinates_for_pickup(self, x: int, y: int, z:int):
@@ -277,12 +279,24 @@ class Robot():
                 y (int): The y coordinate.
                 z (int): The z coordinate.
         """
+        y_offset = 10
+        x_offset = 20
         self.move_to_coordinates(x=x/2, y=y, z=z+200, t=1.5, delay=4)
         if y < 0:
-            self.move_to_coordinates(x=x+10, y=y+30, z=z, t=2, speed=1, delay=4)
+            self.move_to_coordinates(x=x+x_offset, y=y-y_offset, z=z, t=2, speed=1, delay=4)
         else:
-            self.move_to_coordinates(x=x+10, y=y-30, z=z, t=2, speed=1, delay=4)
+            self.move_to_coordinates(x=x+x_offset, y=y-y_offset, z=z, t=2, speed=1, delay=4)
         self.hold()
+
+    def throw(self):
+        """
+        {"T":122,"b":-90,"s":0,"e":145,"h":200,"spd":0,"acc":0}
+        {"T":122,"b":0,"s":0,"e":90,"h":90,"spd":0,"acc":0}
+        """
+        self.move_to_position(e=145,b=-120,s=0,h=200,speed=0,delay=1)
+        self.move_to_position(e=60,b=15,s=0,h=200,speed=0,delay=0.25)
+        self.move_to_position(e=45,b=45,s=0,h=90,speed=0,delay=1)
+        self.reset()
 
     def move_to_pick_up_start(self):
         """
@@ -326,6 +340,8 @@ class Robot():
                 self.hold()
             case '/release':
                 self.release()
+            case '/throw':
+                self.throw()
             case _:
                 print('Invalid action')
 
@@ -334,7 +350,7 @@ def main():
     acceleration = 10
     robot = Robot(speed=speed, acceleration=acceleration)
     time.sleep(1)
-    robot.move_to_pick_up_start()
+    robot.look_around()
 
 if __name__ == "__main__":
     main()

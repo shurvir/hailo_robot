@@ -16,7 +16,24 @@ def is_debugging():
   return sys.gettrace() is not None
 
 camera_queue = None
+video_queue = None
 class_names: List[str] = []
+
+def put_image_in_queue(image_detection: Dict):
+    """
+        Puts an image in the queue.
+
+        Args:
+            image_detection (Dict): The image to put in the queue.
+    """
+    if camera_queue is not None:
+        if camera_queue.full():
+            camera_queue.get()
+        camera_queue.put(image_detection)
+    if video_queue is not None:
+        if video_queue.full():
+            video_queue.get()
+        video_queue.put(image_detection)
 
 def preprocess_frame(frame: np.ndarray, model_h: int, model_w: int
 ) -> np.ndarray:
@@ -189,15 +206,13 @@ def run(hef_path: str, labels_path: str, score_thresh: float = 0.5):
             # Display the resulting frame
             if not is_debugging():
                 cv2.imshow(f'preview', annotated_labeled_frame)
-            if camera_queue is not None:
-                # Add to the queue
-                if camera_queue.full():
-                    camera_queue.get()
-                camera_queue.put({'image': annotated_labeled_frame, 
+            put_image_in_queue({'image': annotated_labeled_frame, 
                                   'detections': sv_detections})
         else:
             if not is_debugging():
                 cv2.imshow(f'preview', image)
+            put_image_in_queue({'image': image, 
+                                  'detections': None})
 
         # Break the loop if the 'q' key is pressed
         if not is_debugging():
