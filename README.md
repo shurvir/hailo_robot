@@ -1,6 +1,20 @@
 # hailo_robot
-A robot controller using the raspberry pi Hailo compute chip
-pip install -r requirements.txt
+Software project for a Roarm-M2 robot arm using the Hailo-8 chip.
+
+## Installation
+Install the HailoRT python modules for Python 3.11 [https://github.com/hailo-ai/hailort]
+
+pip install -r requirements.txt (in the hailort venv)
+
+Be sure to add the following config to your .bashrc file:
+```bash
+source ~/hailort_env/bin/activate
+
+export GEMINI_API_KEY=<GEMINI_API_KEY>
+
+export TELEGRAM_TOKEN=<TELEGRAM_BOT_TOKEN>
+
+export GOOGLE_APPLICATION_CREDENTIALS=<LOCATION_OF_CREDENTIALS_FILE_JSON>
 ```
 
 ## Usage
