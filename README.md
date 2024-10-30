@@ -19,6 +19,8 @@ python main.py
 * HailoRT runtime library
 * OpenCV - remember to use the raspbian version and DO NOT PIP install it
 
+## Coordinate system
+![image info](./test_data/images/sharkie_bot_xyz.jpg)
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
