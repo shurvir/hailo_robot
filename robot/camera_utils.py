@@ -7,12 +7,46 @@ from PIL import Image
 from typing import Dict, List, Tuple
 import math
 
-def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int]:
+def get_robot_directions_from_bbox(bbox: np.ndarray) -> Dict:
     """
     Converts a bounding box to robot coordinates.
 
     Args:
-        bbox: 
+        bbox: Bounded box coordinates (x1, y1, x2, y2)
+
+    Returns:
+        Robot coordinates (x, y, z)
+    """
+    adjusted_x_image = (bbox[2] + bbox[0])/2.0
+    adjusted_y_image = (bbox[3] + bbox[1])/2.0
+
+    # determine vertical
+    robot_up_down = 45*((adjusted_y_image - 640)/640.0) # + = down
+    
+    instructions = {}
+    if robot_up_down < 0:
+        instructions['up'] = abs(robot_up_down)
+    else:
+        instructions['down'] = abs(robot_up_down)
+
+    # determine horizontal
+    robot_left_right = 45*((adjusted_x_image - 640)/640.0) # + = right
+    if robot_left_right < 0:
+        instructions['left'] = abs(robot_left_right)
+    else:
+        instructions['right'] = abs(robot_left_right)
+
+    return instructions
+
+def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int, int]:
+    """
+    Converts a bounding box to robot coordinates.
+
+    Args:
+        bbox: Bounded box coordinates (x1, y1, x2, y2)
+
+    Returns:
+        Robot coordinates (x, y, z)
     """
     adjusted_x_image = (bbox[2] + bbox[0])/2.0
     adjusted_y_image = bbox[3]

@@ -264,11 +264,11 @@ class Robot():
         """
             Moves the robot to look around
         """
-        self.move_to_position(e=80,b=60,h=180,delay=4)
-        self.move_to_position(e=80,b=-60,delay=10)
-        self.move_to_position(e=120,b=-60,delay=4)
-        self.move_to_position(e=120,b=60,delay=10)
-        self.move_to_coordinates(x=250, y=0, z=250, delay=10)
+        self.move_to_position(e=60,b=60,h=180,delay=4)
+        self.move_to_position(e=60,b=-60,delay=10)
+        self.move_to_position(e=100,b=-60,delay=4)
+        self.move_to_position(e=100,b=60,delay=11)
+        self.move_to_coordinates(x=250, y=0, z=250, delay=5)
 
     def move_to_coordinates_for_pickup(self, x: int, y: int, z:int):
         """

@@ -6,6 +6,7 @@ import camera_processor
 import os
 from tts import say
 import asyncio
+import time
 from robot import Robot
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
@@ -15,6 +16,7 @@ hailo_bot = Robot(speed=20, acceleration=10)
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 video_queue = None
+tracking = False
 
 def pick_up_object(object_name: str):
     """
@@ -173,3 +175,29 @@ def send_action_to_robot(message):
             message (str): The action to send to the robot.
     """
     hailo_bot.do_action(message)
+
+def track(object_name, object_id):
+    global tracking
+    tracking = False
+    if camera_queue is not None:
+        tracking = True
+        while tracking:
+            detections = camera_queue.get()['detections']
+            if detections is not None:
+                instructions = camera_processor.get_direction_to_object(object_name, detections, object_id)
+                if instructions is not None:
+                    if 'up' in instructions:
+                        hailo_bot.move_up(instructions['up'])
+                    if 'down' in instructions:
+                        hailo_bot.move_down(instructions['down'])
+                    if 'left' in instructions:
+                        hailo_bot.move_left(instructions['left'])
+                    if 'right' in instructions: 
+                        hailo_bot.move_right(instructions['right'])
+                    time.sleep(1)
+                else:
+                    tracking = False
+                    break
+            else:
+                tracking = False
+                break

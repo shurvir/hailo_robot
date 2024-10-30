@@ -32,7 +32,15 @@ def send_camera_metadata(message):
 @telegram_bot.message_handler(commands=['describe_scene'])
 def describe_scene(message):
     controller.describe_scene(telegram_bot, message.chat.id)
-    
+
+@telegram_bot.message_handler(commands=['track_object'])
+def track_object(message):
+    if len(message.text.split(' ')) < 3:
+        return
+    object_name = message.text.replace('/track_object','').strip().split(' ')[0]
+    object_id = (int) (message.text.replace('/track_object','').strip().split(' ')[1])
+    controller.track(object_name, object_id)
+
 @telegram_bot.message_handler(content_types=['text'])
 def echo_all(message):
     controller.send_message_to_AI(message.text, telegram_bot, message.chat.id)

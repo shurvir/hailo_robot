@@ -18,6 +18,8 @@ def is_debugging():
 camera_queue = None
 video_queue = None
 class_names: List[str] = []
+camera_width = 1280
+camera_height = 1280
 
 def put_image_in_queue(image_detection: Dict):
     """
@@ -39,8 +41,7 @@ def preprocess_frame(frame: np.ndarray, model_h: int, model_w: int
 ) -> np.ndarray:
     """Preprocess the frame to match the model's input size."""
     resized_frame = cv2.resize(frame, (model_w, model_h))
-    return resized_frame
-
+    return resized_frame 
 
 def extract_detections(
     hailo_output: List[np.ndarray], h: int, w: int, threshold: float = 0.5
@@ -115,9 +116,28 @@ def postprocess_detections(
     )
     return annotated_labeled_frame, sv_detections
 
-def get_coordinates_of_object(object_name: str, detection_results: sv.Detections) -> Tuple[int, int] | None:
+def get_direction_to_object(object_name: str, detection_results: sv.Detections, object_id: int = 0) -> Dict | None:
     """
-    Gets the coordinates of the top-left corner of the bounding box for the first detected object 
+    Gets the direction to the object with the given name and confidence above 0.5.
+
+    """
+    try:
+        class_id = class_names.index(object_name)
+    except ValueError:
+        return None
+
+    for box, detection_class_id, confidence, tracker_id in zip(
+        detection_results.xyxy, detection_results.class_id, detection_results.confidence, detection_results.tracker_id
+    ):
+        if detection_class_id == class_id and confidence > 0.5:
+            if object_id == 0 or tracker_id == object_id:
+                return camera_utils.get_robot_directions_from_bbox(box)
+
+    return None
+
+def get_coordinates_of_object(object_name: str, detection_results: sv.Detections) -> Tuple[int, int, int] | None:
+    """
+    Gets the coordinates of the centre of the bounding box for the first detected object 
     with the given name and confidence above 0.5.
 
     Args:
@@ -168,7 +188,7 @@ def run(hef_path: str, labels_path: str, score_thresh: float = 0.5):
 
     # Initialize picamera2
     picam2 = Picamera2()
-    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (1280, 1280)}))
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'RGB888', "size": (camera_width, camera_height)}))
     
     picam2.start()
     
