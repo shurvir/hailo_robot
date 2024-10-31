@@ -37,8 +37,8 @@ def describe_scene(message):
 def track_object(message):
     if len(message.text.split(' ')) < 3:
         return
-    object_name = message.text.replace('/track_object','').strip().split(' ')[0]
-    object_id = (int) (message.text.replace('/track_object','').strip().split(' ')[1])
+    object_name = ' '.join(message.text.replace('/track_object','').strip().split(' ')[0:-1])
+    object_id = (int) (message.text.replace('/track_object','').strip().split(' ')[-1])
     controller.track(object_name, object_id)
 
 @telegram_bot.message_handler(content_types=['text'])

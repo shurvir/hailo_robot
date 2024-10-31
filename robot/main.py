@@ -20,7 +20,7 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
         "-l", "--labels", default="/home/pi/Documents/hailo_robot/settings/coco.txt", help="Path to a text file containing labels."
     )
     parser.add_argument(
-        "-s", "--score_thresh", type=float, default=0.5, help="Score threshold - between 0 and 1."
+        "-s", "--score_thresh", type=float, default=0.25, help="Score threshold - between 0 and 1."
     )
     return parser
 

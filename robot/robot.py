@@ -279,7 +279,7 @@ class Robot():
                 y (int): The y coordinate.
                 z (int): The z coordinate.
         """
-        y_offset = 10
+        y_offset = 40
         x_offset = 20
         self.move_to_coordinates(x=x/2, y=y, z=z+200, t=1.5, delay=4)
         if y < 0:

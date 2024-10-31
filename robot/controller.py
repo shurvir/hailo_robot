@@ -32,7 +32,7 @@ def pick_up_object(object_name: str):
         hailo_bot.move_to_coordinates_for_pickup(x=coordinates[0], y=coordinates[1], z=coordinates[2])
 
 def drop_off_object(location: str):
-    """q
+    """
         Tells the robot to drop off the object
     """
     hailo_bot.move_up(90,delay=3)
@@ -181,23 +181,23 @@ def track(object_name, object_id):
     tracking = False
     if camera_queue is not None:
         tracking = True
+        tracking_counter = 0
         while tracking:
             detections = camera_queue.get()['detections']
-            if detections is not None:
-                instructions = camera_processor.get_direction_to_object(object_name, detections, object_id)
-                if instructions is not None:
-                    if 'up' in instructions:
-                        hailo_bot.move_up(instructions['up'])
-                    if 'down' in instructions:
-                        hailo_bot.move_down(instructions['down'])
-                    if 'left' in instructions:
-                        hailo_bot.move_left(instructions['left'])
-                    if 'right' in instructions: 
-                        hailo_bot.move_right(instructions['right'])
-                    time.sleep(1)
-                else:
+            instructions = camera_processor.get_direction_to_object(object_name, detections, object_id)
+            if instructions is not None:
+                if 'up' in instructions:
+                    hailo_bot.move_up(instructions['up'])
+                if 'down' in instructions:
+                    hailo_bot.move_down(instructions['down'])
+                if 'left' in instructions:
+                    hailo_bot.move_left(instructions['left'])
+                if 'right' in instructions: 
+                    hailo_bot.move_right(instructions['right'])
+                tracking_counter = 0
+            else:
+                tracking_counter = tracking_counter + 1
+                if tracking_counter > 25:
                     tracking = False
                     break
-            else:
-                tracking = False
-                break
+            time.sleep(0.25)

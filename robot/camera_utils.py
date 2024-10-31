@@ -18,7 +18,7 @@ def get_robot_directions_from_bbox(bbox: np.ndarray) -> Dict:
         Robot coordinates (x, y, z)
     """
     adjusted_x_image = (bbox[2] + bbox[0])/2.0
-    adjusted_y_image = (bbox[3] + bbox[1])/2.0
+    adjusted_y_image = bbox[3]
 
     # determine vertical
     robot_up_down = 45*((adjusted_y_image - 640)/640.0) # + = down
@@ -30,7 +30,7 @@ def get_robot_directions_from_bbox(bbox: np.ndarray) -> Dict:
         instructions['down'] = abs(robot_up_down)
 
     # determine horizontal
-    robot_left_right = 45*((adjusted_x_image - 640)/640.0) # + = right
+    robot_left_right = 30*((adjusted_x_image - 640)/640.0) # + = right
     if robot_left_right < 0:
         instructions['left'] = abs(robot_left_right)
     else:

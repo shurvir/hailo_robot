@@ -29,9 +29,10 @@ def put_image_in_queue(image_detection: Dict):
             image_detection (Dict): The image to put in the queue.
     """
     if camera_queue is not None:
-        if camera_queue.full():
-            camera_queue.get()
-        camera_queue.put(image_detection)
+        if  image_detection['detections'] is not None:
+            if camera_queue.full():
+                camera_queue.get()
+            camera_queue.put(image_detection)
     if video_queue is not None:
         if video_queue.full():
             video_queue.get()
@@ -126,10 +127,10 @@ def get_direction_to_object(object_name: str, detection_results: sv.Detections, 
     except ValueError:
         return None
 
-    for box, detection_class_id, confidence, tracker_id in zip(
-        detection_results.xyxy, detection_results.class_id, detection_results.confidence, detection_results.tracker_id
+    for box, detection_class_id, tracker_id in zip(
+        detection_results.xyxy, detection_results.class_id, detection_results.tracker_id
     ):
-        if detection_class_id == class_id and confidence > 0.5:
+        if detection_class_id == class_id:
             if object_id == 0 or tracker_id == object_id:
                 return camera_utils.get_robot_directions_from_bbox(box)
 
@@ -153,10 +154,10 @@ def get_coordinates_of_object(object_name: str, detection_results: sv.Detections
     except ValueError:
         return None
 
-    for box, detection_class_id, confidence in zip(
-        detection_results.xyxy, detection_results.class_id, detection_results.confidence
+    for box, detection_class_id in zip(
+        detection_results.xyxy, detection_results.class_id
     ):
-        if detection_class_id == class_id and confidence > 0.5:
+        if detection_class_id == class_id:
             return camera_utils.get_robot_coordinates_from_bbox(box)
 
     return None
