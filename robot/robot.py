@@ -3,7 +3,7 @@ import math
 import json
 import time
 
-ROARM_IP = '192.168.182.245' # Static IP for now but need to figure out how to get this dynamic
+DEFAULT_ROARM_IP = '192.168.182.245'
 
 class Robot():
     """
@@ -21,18 +21,18 @@ class Robot():
     _state: dict
     _speed: int
     _acceleration: int
-    _directions: dict = {'up':   {'joint_letter': 'e', 'sign': -1, 'joint_index': 3},
-                         'down': {'joint_letter': 'e', 'sign': +1, 'joint_index': 3},
-                         'left': {'joint_letter': 'b', 'sign': +1, 'joint_index': 1},
-                         'right':{'joint_letter': 'b', 'sign': -1, 'joint_index': 1},
-                         'forward': {'joint_letter': 's', 'sign': +1, 'joint_index': 2},
+    _directions: dict = {      'up': {'joint_letter': 'e', 'sign': -1, 'joint_index': 3},
+                             'down': {'joint_letter': 'e', 'sign': +1, 'joint_index': 3},
+                             'left': {'joint_letter': 'b', 'sign': +1, 'joint_index': 1},
+                            'right': {'joint_letter': 'b', 'sign': -1, 'joint_index': 1},
+                          'forward': {'joint_letter': 's', 'sign': +1, 'joint_index': 2},
                          'backward': {'joint_letter': 's', 'sign': -1, 'joint_index': 2}}
     
     ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'go_forward',
                 'go_backward', 'light_on', 'light_off', 'look_around', 'pick_up_start', 
                 'grab', 'reset', 'hold', 'release', 'throw']
 
-    def __init__(self, speed: int = 0, acceleration: int = 2) -> None:
+    def __init__(self, speed: int = 0, acceleration: int = 2, ip_address: str = DEFAULT_ROARM_IP) -> None:
         """
             Initializes a new instance of the Robot class.
 
@@ -41,7 +41,7 @@ class Robot():
                 acceleration (int): The acceleration of the robot.
                 delay (int): The delay between commands.
         """
-        self._ip_addr = ROARM_IP
+        self._ip_addr = ip_address
         self._state = self.get_state()
         self._speed = speed
         self._acceleration = acceleration
@@ -290,8 +290,7 @@ class Robot():
 
     def throw(self):
         """
-        {"T":122,"b":-90,"s":0,"e":145,"h":200,"spd":0,"acc":0}
-        {"T":122,"b":0,"s":0,"e":90,"h":90,"spd":0,"acc":0}
+            Throws the object
         """
         self.move_to_position(e=145,b=-120,s=0,h=200,speed=0,delay=1)
         self.move_to_position(e=60,b=15,s=0,h=200,speed=0,delay=0.25)
