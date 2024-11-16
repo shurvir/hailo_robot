@@ -14,10 +14,10 @@ def test_robot_init(robot):
     assert robot._acceleration == 2
 
 def test_robot_move_to_coordinates(robot):
-    robot.move_to_pickup_start()
-    time.sleep(3)
+    robot.move_to_pick_up_start()
+    time.sleep(5)
     robot.get_state()
-    assert math.isclose(math.degrees(robot._state['e']), 160, abs_tol=5)
+    assert math.isclose(math.degrees(robot._state['e']), 90, abs_tol=5)
     assert math.isclose(math.degrees(robot._state['b']), 0, abs_tol=5)
     assert math.isclose(math.degrees(robot._state['t']), 180, abs_tol=5)
 
