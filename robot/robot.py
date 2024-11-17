@@ -27,10 +27,7 @@ class Robot():
                             'right': {'joint_letter': 'b', 'sign': -1, 'joint_index': 1},
                           'forward': {'joint_letter': 's', 'sign': +1, 'joint_index': 2},
                          'backward': {'joint_letter': 's', 'sign': -1, 'joint_index': 2}}
-    
-    ACTIONS = [ 'turn_left', 'turn_right', 'go_up', 'go_down', 'go_forward',
-                'go_backward', 'light_on', 'light_off', 'look_around', 'pick_up_start', 
-                'grab', 'reset', 'hold', 'release', 'throw']
+    _action_dictionary: dict
 
     def __init__(self, speed: int = 0, acceleration: int = 2, ip_address: str = DEFAULT_ROARM_IP) -> None:
         """
@@ -46,6 +43,38 @@ class Robot():
         self._speed = speed
         self._acceleration = acceleration
         self.reset()
+        self._assign_actions()
+
+    def _assign_actions(self):
+        """
+            Assigns actions to the robot.
+        """
+        self._action_dictionary = {
+            'turn_left': self.move_left(15),
+            'turn_right': self.move_right(15),
+            'go_up': self.move_up(15),
+            'go_down': self.move_down(15),
+            'go_forward': self.move_forward(15),
+            'go_backward': self.move_backward(15),
+            'light_on': self.set_light(255),
+            'light_off': self.set_light(0),
+            'look_around': self.look_around(),
+            'pick_up_start': self.move_to_pick_up_start(),
+            'grab': self.grab(),
+            'reset': self.reset(),
+            'hold': self.hold(),
+            'release': self.release(),
+            'throw': self.throw()
+        }
+
+    def get_actions(self):
+        """
+            Returns the list of available actions.
+
+            Returns:
+                list: The list of available actions.
+        """
+        return self._action_dictionary.keys()
 
     def reset(self):
         """
@@ -310,46 +339,17 @@ class Robot():
             Args:
                 action (str): The action to perform.
         """
-        match action.lower():
-            case '/turn_left':
-                self.move_left(15)
-            case '/turn_right':
-                self.move_right(15)
-            case '/go_up':
-                self.move_up(15)
-            case '/go_down':
-                self.move_down(15)
-            case '/go_forward':
-                self.move_forward(15)
-            case '/go_backward':
-                self.move_backward(15)
-            case '/light_on':
-                self.set_light(255)
-            case '/light_off':
-                self.set_light(0)
-            case '/look_around':
-                self.look_around()
-            case '/pick_up_start':
-                self.move_to_pick_up_start()
-            case '/grab':
-                self.grab()
-            case '/reset':
-                self.reset()
-            case '/hold':
-                self.hold()
-            case '/release':
-                self.release()
-            case '/throw':
-                self.throw()
-            case _:
-                print('Invalid action')
+        if action in self._action_dictionary:
+            self._action_dictionary[action]
+        else:
+            print('Invalid action')
 
 def main():
-    speed = 10
+    speed = 20
     acceleration = 10
     robot = Robot(speed=speed, acceleration=acceleration)
     time.sleep(1)
-    robot.look_around()
+    robot.do_action('look_around')
 
 if __name__ == "__main__":
     main()

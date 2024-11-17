@@ -10,9 +10,9 @@ import time
 from robot import Robot
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-ROBOT_COMMANDS = Robot.ACTIONS
 bot = telebot.TeleBot(BOT_TOKEN)
 hailo_bot = Robot(speed=20, acceleration=10)
+ROBOT_COMMANDS = hailo_bot.get_commands()
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat()
 camera_queue = None
 video_queue = None
