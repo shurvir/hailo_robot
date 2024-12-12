@@ -70,7 +70,7 @@ class GeminiChat(AIChat):
         Initializes a new instance of the GeminiChat class.
         """
         genai.configure(api_key=GEMINI_API_KEY)
-        self._model = genai.GenerativeModel("gemini-1.5-pro")
+        self._model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
         # Define the chat context
         context = [
