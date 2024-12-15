@@ -144,7 +144,7 @@ def map_instruction_to_action(instruction: str, telegram_bot: telebot.TeleBot, c
     list_of_commands = [t.strip('.').strip(',') for t in instruction.lower().split(' ')]
     command_string = '_'.join(list_of_commands)
     if command_string in ROBOT_COMMANDS:
-        hailo_bot.do_action('/'+ command_string)
+        hailo_bot.do_action(command_string)
         return command_string
     elif command_string.startswith('pick_up') and len(list_of_commands) > 2:
         pick_up_object((' '.join(list_of_commands[2:])).strip('.'))
