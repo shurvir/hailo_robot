@@ -48,24 +48,32 @@ def drop_off_object(location: str):
     hailo_bot.hold()
 
 
-def find_object(object_name: str):
+def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Tell the AI bot to identify an object on the camera and pick up that object
 
         Args: 
             object_name (str): The name of the object to find.
     """
+    # get image from queue
     camera_metadata = camera_queue.get()['image']
+    # convert image to byte array
     image_byte_arr, _ = camera_utils.convert_array_image(camera_metadata, 'PNG')
+    # prompt the AI bot to identify the object in the image
     prompt = f'What are the bounding box coordinates of the {object_name} in this image?'+ \
         ' Given that the image is 1280x1280, return the coordinates in the form x1, y1, x2, y2.'
     response = ai_chat_bot.generate_content(prompt=prompt,
                                             mime_type='image/png', data=image_byte_arr.getvalue())
     y1, x1, y2, x2 = map(int, response.split(',')[0:4])
+    # get robot coordinates from bounding box
     coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
-    camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
+    # draw square on image with label
+    labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), object_name)
+    labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
+    #save to pi when debugging camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
     if coordinates is not None:
-        hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
+        telegram_bot.send_photo(chat_id, photo=labeled_image_byte_arr)
+        # commented out while testing hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
 
 def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
     """

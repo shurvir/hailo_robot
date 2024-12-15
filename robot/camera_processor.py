@@ -29,10 +29,9 @@ def put_image_in_queue(image_detection: Dict):
             image_detection (Dict): The image to put in the queue.
     """
     if camera_queue is not None:
-        if  image_detection['detections'] is not None:
-            if camera_queue.full():
-                camera_queue.get()
-            camera_queue.put(image_detection)
+        if camera_queue.full():
+            camera_queue.get()
+        camera_queue.put(image_detection)
     if video_queue is not None:
         if video_queue.full():
             video_queue.get()

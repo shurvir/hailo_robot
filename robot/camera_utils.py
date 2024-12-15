@@ -61,21 +61,31 @@ def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int, int]:
 
     return (robot_x, robot_y, robot_z)
 
-def draw_square_on_image(image: np.ndarray, bbox: tuple) -> np.ndarray:
+def draw_square_on_image(image: np.ndarray, bbox: tuple, label: str = "found") -> np.ndarray:
     """
-    Draws a square on an image given the bounding box coordinates.
+    Draws a square and a label on an image given the bounding box coordinates.
 
     Args:
         image: A NumPy array representing the image.
         bbox: A tuple containing the (x1, y1, x2, y2) coordinates 
               of the top-left and bottom-right corners of the bounding box.
+        label: A string representing the label to be drawn on the image.
 
     Returns:
-        A NumPy array representing the image with the square drawn.
+        A NumPy array representing the image with the square and label drawn.
     """
 
     x1, y1, x2, y2 = bbox
-    cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Green color, thickness 2
+    cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)  # Blue color, thickness 2
+
+    if label:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        font_thickness = 2  # Increased thickness
+        text_x = x1
+        text_y = y1 - 10 if y1 - 10 > 10 else y1 + 10
+        cv2.putText(image, label, (text_x, text_y), font, font_scale, (255, 0, 0), font_thickness)
+
     return image
 
 def save_temp_image(image: np.ndarray):

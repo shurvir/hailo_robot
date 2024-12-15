@@ -19,7 +19,7 @@ def go_to(message):
 
 @telegram_bot.message_handler(commands=['find'])
 def go_to(message):
-    controller.find_object(message.text.replace('/find','').strip())
+    controller.find_object(message.text.replace('/find','').strip(), telegram_bot, message.chat.id)
 
 @telegram_bot.message_handler(commands=ROBOT_COMMANDS)
 def do_robot_action(message):
