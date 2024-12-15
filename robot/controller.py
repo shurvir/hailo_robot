@@ -8,6 +8,7 @@ from tts import say
 import asyncio
 import time
 from robot import Robot
+import json
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -58,13 +59,20 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
     # get image from queue
     camera_metadata = camera_queue.get()['image']
     # convert image to byte array
-    image_byte_arr, _ = camera_utils.convert_array_image(camera_metadata, 'PNG')
+    image_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'JPEG')
     # prompt the AI bot to identify the object in the image
-    prompt = f'What are the bounding box coordinates of the {object_name} in this image?'+ \
-        ' Given that the image is 1280x1280, return the coordinates in the form x1, y1, x2, y2.'
-    response = ai_chat_bot.generate_content(prompt=prompt,
-                                            mime_type='image/png', data=image_byte_arr.getvalue())
-    y1, x1, y2, x2 = map(int, response.split(',')[0:4])
+    prompt = f'Detect the 2d bounding boxes of the {object_name} (with “label” as topping description”)'
+    response = ai_chat_bot.get_bbox_coordinates(prompt=prompt,
+                                                data=img)
+    # get bounding box coordinates from response
+    try:
+        json_response = json.loads(response.replace("```json\n", "").replace("```", ""))
+        y1, x1, y2, x2 = map(int, json_response[0]['box_2d'])
+        print(f'{x1}, {y1}, {x2}, {y2}')
+    except ValueError:
+        telegram_bot.send_message(chat_id, 'Could not find object.')
+        return
+    
     # get robot coordinates from bounding box
     coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
     # draw square on image with label

@@ -1,5 +1,5 @@
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google import genai
+from google.genai import types
 import tempfile
 import os
 import time
@@ -52,6 +52,9 @@ class AIChat():
     def generate_content_from_video(self, video_data, prompt):
         pass
 
+    def get_bbox_coordinates(self, prompt, mime_type, data):
+        pass
+
 
 class GeminiChat(AIChat):
     """
@@ -62,28 +65,31 @@ class GeminiChat(AIChat):
         _chat (genai.ChatSession): The chat session.
     
     """
-    _model: genai.GenerativeModel
+    _client: genai.Client
     _chat: genai.ChatSession
+    _model_name: str
 
     def __init__(self):
         """
         Initializes a new instance of the GeminiChat class.
         """
-        genai.configure(api_key=GEMINI_API_KEY)
-        self._model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        self._client = genai.Client(api_key=GEMINI_API_KEY)
+        self._model_name = "gemini-2.0-flash-exp"
 
-        # Define the chat context
-        context = [
-            {"role": "user", "parts": ["I want you to behave as though you are a robot arm with audio visual capabilities.",
-                                       "I have connected you to a physical robotic arm so any instructions I tell you, are carried out by the physical arm."
-                                       "Your text output is played into my living area via Speech to Text.",
-                                       "Your name is Sharkie.",
-                                       "Have a serious tone and don't make robot noises."]},
-            {"role": "model", "parts": "Sure, I understand."},
-        ]
-
-        # Start a chat session with the context
-        self._chat = self._model.start_chat(history=context)
+        system_instruction="""
+        I want you to behave as though you are a robot arm with audio visual capabilities.
+        I have connected you to a physical robotic arm so any instructions I tell you, are carried out by the physical arm.
+        Your text output is played into my living area via Speech to Text.
+        Your name is Sharkie.
+        Have a serious tone and don't make robot noises.
+        """
+        self._chat = self._client.chats.create(
+            model=self._model_name,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.5,
+            ),
+        )
     
     def send_message(self, message: str):
         """
@@ -99,7 +105,7 @@ class GeminiChat(AIChat):
         output_message = response.text
         return output_message
     
-    def generate_content(self, prompt, mime_type, data):
+    def generate_content(self, prompt, data):
         """
         Generates content using the model.
         
@@ -111,13 +117,29 @@ class GeminiChat(AIChat):
         Returns:
             str: The response from the model.
         """
-        response = self._model.generate_content([
-            prompt,
-            {
-                "mime_type": mime_type,
-                "data": data
-            }
-        ])
+        response = self._client.models.generate_content(
+            model=self._model_name,
+            contents=[
+                data,
+                prompt
+            ]
+        )
+
+        return response.text
+    
+    def get_bbox_coordinates(self, prompt, data):
+        bounding_box_system_instructions = """
+        Return bounding boxes as a JSON array with labels. Never return masks or code fencing. Limit to 25 objects.
+        If an object is present multiple times, name them according to their unique characteristic (colors, size, position, unique characteristics, etc..).
+        """
+        response = self._client.models.generate_content(
+            model=self._model_name,
+            contents=[prompt, data],
+            config = types.GenerateContentConfig(
+                system_instruction=bounding_box_system_instructions,
+                temperature=0.5
+            )
+        )
 
         return response.text
     
@@ -132,11 +154,23 @@ class GeminiChat(AIChat):
         Returns:
             str: The response from the model.
         """
-        video_file = self.upload_bytes_as_video_file(video_data, 'video.mp4')
-        response = self._model.generate_content([video_file, prompt], request_options={"timeout": 1800})
+        video_file = self.upload_bytes_as_video_file(video_data)
+        response = self._client.models.generate_content(
+            model=self._model_name,
+            contents=[
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_uri(
+                            file_uri=video_file.uri,
+                            mime_type=video_file.mime_type),
+                        ]),
+                prompt,
+            ]
+        )
         return response.text
     
-    def upload_bytes_as_video_file(self, bytes_data, display_name):
+    def upload_bytes_as_video_file(self, bytes_data):
         """Uploads bytes data as a file to Gemini.
 
         Args:
@@ -151,17 +185,14 @@ class GeminiChat(AIChat):
             temp_file_path = temp_file.name
 
         # Now use the temporary file path to upload
-        video_file = genai.upload_file(
-            path=temp_file_path, 
-            display_name=display_name, 
-            resumable=True, 
-            mime_type="video/mp4"
-        )
+        video_file = self._client.files.upload(path=temp_file_path)
+        os.remove(temp_file_path)
+
         # Check upload status
-        while video_file.state.name == "PROCESSING":
-            print(".", end="")
-            time.sleep(2)
-            video_file = genai.get_file(video_file.name)
+        while video_file.state == "PROCESSING":
+            print('Waiting for video to be processed.')
+            time.sleep(10)
+            video_file = self._client.files.get(name=video_file.name)
 
         if video_file.state.name == "FAILED":
             raise ValueError(video_file.state.name)
