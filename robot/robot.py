@@ -28,6 +28,7 @@ class Robot():
                           'forward': {'joint_letter': 's', 'sign': +1, 'joint_index': 2},
                          'backward': {'joint_letter': 's', 'sign': -1, 'joint_index': 2}}
     _action_dictionary: dict
+    actions = ['turn_left', 'turn_right', 'go_up', 'go_down', 'go_forward', 'go_backward', 'light_on', 'light_off', 'look_around', 'pick_up_start', 'grab', 'reset', 'hold', 'release', 'throw']
 
     def __init__(self, speed: int = 0, acceleration: int = 2, ip_address: str = DEFAULT_ROARM_IP) -> None:
         """
@@ -50,21 +51,21 @@ class Robot():
             Assigns actions to the robot.
         """
         self._action_dictionary = {
-            'turn_left': self.move_left(15),
-            'turn_right': self.move_right(15),
-            'go_up': self.move_up(15),
-            'go_down': self.move_down(15),
-            'go_forward': self.move_forward(15),
-            'go_backward': self.move_backward(15),
-            'light_on': self.set_light(255),
-            'light_off': self.set_light(0),
-            'look_around': self.look_around(),
-            'pick_up_start': self.move_to_pick_up_start(),
-            'grab': self.grab(),
-            'reset': self.reset(),
-            'hold': self.hold(),
-            'release': self.release(),
-            'throw': self.throw()
+            'turn_left': lambda: self.move_left(15),
+            'turn_right': lambda: self.move_right(15),
+            'go_up': lambda: self.move_up(15),
+            'go_down': lambda: self.move_down(15),
+            'go_forward': lambda: self.move_forward(15),
+            'go_backward': lambda: self.move_backward(15),
+            'light_on': lambda: self.set_light(255),
+            'light_off': lambda: self.set_light(0),
+            'look_around': lambda: self.look_around(),
+            'pick_up_start': lambda: self.move_to_pick_up_start(),
+            'grab': lambda: self.grab(),
+            'reset': lambda: self.reset(),
+            'hold': lambda: self.hold(),
+            'release': lambda: self.release(),
+            'throw': lambda: self.throw()
         }
 
     def get_actions(self):
@@ -340,7 +341,7 @@ class Robot():
                 action (str): The action to perform.
         """
         if action in self._action_dictionary:
-            self._action_dictionary[action]
+            self._action_dictionary[action]()
         else:
             print('Invalid action')
 
