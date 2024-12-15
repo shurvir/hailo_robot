@@ -66,7 +66,7 @@ class GeminiChat(AIChat):
     
     """
     _client: genai.Client
-    _chat: genai.ChatSession
+    _chat = None
     _model_name: str
 
     def __init__(self):
@@ -143,7 +143,7 @@ class GeminiChat(AIChat):
 
         return response.text
     
-    def generate_content_from_video(self, video_data, prompt):
+    def generate_content_from_video(self, video_data, prompt, mime_type="video/mp4"):
         """
         Generates content using the model.
         
@@ -154,7 +154,7 @@ class GeminiChat(AIChat):
         Returns:
             str: The response from the model.
         """
-        video_file = self.upload_bytes_as_video_file(video_data)
+        video_file = self.upload_bytes_as_video_file(video_data, mime_type)
         response = self._client.models.generate_content(
             model=self._model_name,
             contents=[
@@ -170,7 +170,7 @@ class GeminiChat(AIChat):
         )
         return response.text
     
-    def upload_bytes_as_video_file(self, bytes_data):
+    def upload_bytes_as_video_file(self, bytes_data, mime_type):
         """Uploads bytes data as a file to Gemini.
 
         Args:
@@ -180,7 +180,7 @@ class GeminiChat(AIChat):
         Returns:
             The google.generativeai.File object representing the uploaded file.
         """
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
             temp_file.write(bytes_data)
             temp_file_path = temp_file.name
 
@@ -194,7 +194,7 @@ class GeminiChat(AIChat):
             time.sleep(10)
             video_file = self._client.files.get(name=video_file.name)
 
-        if video_file.state.name == "FAILED":
+        if video_file.state == "FAILED":
             raise ValueError(video_file.state.name)
 
         return video_file

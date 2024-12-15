@@ -92,8 +92,7 @@ def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
         img_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'PNG')
         
         # Get VN response
-        ai_chat_bot.send_message(img)
-        description = ai_chat_bot.send_message("Describe this image.")
+        description = ai_chat_bot.generate_content(prompt="Describe this image.", data=img)
 
         telegram_bot.send_photo(chat_id, photo=img_byte_arr)
         telegram_bot.send_message(chat_id, description)
@@ -117,7 +116,8 @@ def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
                 
         # Get VN response
         description =  ai_chat_bot.generate_content_from_video(prompt="Describe this video.", 
-                                                    video_data=video_data.getvalue())
+                                                    video_data=video_data.getvalue(),
+                                                    mime_type="video/mp4")
         if video_data is not None:
             telegram_bot.send_video(chat_id=chat_id, video=video_data)
             telegram_bot.send_message(chat_id, description)
