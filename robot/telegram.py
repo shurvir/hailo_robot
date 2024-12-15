@@ -6,7 +6,7 @@ import controller
 import asyncio
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-ROBOT_COMMANDS = Robot.actions
+ROBOT_COMMANDS = Robot.get_actions()
 telegram_bot = telebot.TeleBot(BOT_TOKEN)
 
 @telegram_bot.message_handler(commands=['pick_up'])
@@ -23,7 +23,7 @@ def go_to(message):
 
 @telegram_bot.message_handler(commands=ROBOT_COMMANDS)
 def do_robot_action(message):
-    controller.send_action_to_robot(message.text.replace('/find','').strip())
+    controller.send_action_to_robot(message.text.replace('/',''))
 
 @telegram_bot.message_handler(commands=['get_camera_metadata'])
 def send_camera_metadata(message):
