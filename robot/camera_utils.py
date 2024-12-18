@@ -63,7 +63,7 @@ def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int, int]:
 
 def draw_square_on_image(image: np.ndarray, bbox: tuple, label: str = "found") -> np.ndarray:
     """
-    Draws a square and a label on an image given the bounding box coordinates.
+    Draws a square and a label with background on an image given the bounding box coordinates.
 
     Args:
         image: A NumPy array representing the image.
@@ -81,9 +81,21 @@ def draw_square_on_image(image: np.ndarray, bbox: tuple, label: str = "found") -
     if label:
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 0.5
-        font_thickness = 2  # Increased thickness
+        font_thickness = 2
         text_x = x1
         text_y = y1 - 10 if y1 - 10 > 10 else y1 + 10
+        
+        # Get text size
+        (text_width, text_height), _ = cv2.getTextSize(label, font, font_scale, font_thickness)
+        
+        # Draw background rectangle for text
+        cv2.rectangle(image, 
+                     (text_x, text_y - text_height), 
+                     (text_x + text_width, text_y + 5), 
+                     (255, 255, 255), 
+                     -1)  # -1 fills the rectangle
+        
+        # Draw text
         cv2.putText(image, label, (text_x, text_y), font, font_scale, (255, 0, 0), font_thickness)
 
     return image
