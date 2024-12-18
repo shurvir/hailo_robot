@@ -44,8 +44,33 @@ class Robot():
             'release': lambda robot: robot.release(),
             'throw': lambda robot: robot.throw()
         }
-    positions = range(1, 6)
+    
+    _preset_positions_dictionary = {
+        1: lambda robot: robot.move_to_position(e=60,b=60,h=180,delay=6),
+        2: lambda robot: robot.move_to_position(e=60,b=-60,delay=6),
+        3: lambda robot: robot.move_to_position(e=80,b=0,delay=6),
+        4: lambda robot: robot.move_to_position(e=100,b=-60,delay=6),
+        5: lambda robot: robot.move_to_position(e=100,b=60,delay=6),
+    }
 
+    def get_preset_positions():
+        """
+            Returns the list of available presets.
+
+            Returns:
+                list: The list of available presets.
+        """
+        return Robot._preset_positions_dictionary.keys()
+    
+    def get_actions():
+        """
+            Returns the list of available actions.
+
+            Returns:
+                list: The list of available actions.
+        """
+        return Robot._action_dictionary.keys()
+    
     def __init__(self, speed: int = 0, acceleration: int = 2, ip_address: str = DEFAULT_ROARM_IP) -> None:
         """
             Initializes a new instance of the Robot class.
@@ -60,16 +85,7 @@ class Robot():
         self._speed = speed
         self._acceleration = acceleration
         self.reset()
-
-    def get_actions():
-        """
-            Returns the list of available actions.
-
-            Returns:
-                list: The list of available actions.
-        """
-        return Robot._action_dictionary.keys()
-
+    
     def reset(self):
         """
             Resets the robot to its initial state.
@@ -328,22 +344,13 @@ class Robot():
 
     def move_to_preset_position(self, position: int):
         """
-            Moves the robot to a specific position.
-
+            Moves the robot to a preset position
+            
             Args:
                 position (int): The position to move to.
         """
-        match position:
-            case 1:
-                self.move_to_position(e=60,b=60,h=180,delay=6)
-            case 2:
-                self.move_to_position(e=60,b=-60,delay=6)
-            case 3:
-                self.move_to_position(e=100,b=-60,delay=6)
-            case 4:
-                self.move_to_position(e=100,b=60,delay=6)
-            case 5:
-                self.reset()
+        if position in Robot._preset_positions_dictionary:
+            Robot._preset_positions_dictionary[position](self)
                 
     def do_action(self, action: str):
         """

@@ -18,8 +18,8 @@ def is_debugging():
 camera_queue = None
 video_queue = None
 class_names: List[str] = []
-camera_width = 1024
-camera_height = 1024
+camera_width = 1280
+camera_height = 1280
 
 def put_image_in_queue(image_detection: Dict):
     """

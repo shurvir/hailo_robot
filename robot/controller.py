@@ -52,7 +52,7 @@ def detect_object(object_name: str):
     # get image from queue
     camera_metadata = camera_queue.get()['image']
     # convert image to byte array
-    image_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'JPEG')
+    _, img = camera_utils.convert_array_image(camera_metadata, 'JPEG')
     # prompt the AI bot to identify the object in the image
     prompt = f'Detect the 2d bounding boxes of objects matching the description "{object_name}" (only strong matches).'
     response = ai_chat_bot.get_bbox_coordinates(prompt=prompt,
@@ -62,19 +62,24 @@ def detect_object(object_name: str):
 
 def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
-        Tell the AI bot to identify an object on the camera and pick up that object
+        Tell the AI bot to identify an object on the camera and send a photo to the telegram chat
 
         Args: 
             object_name (str): The name of the object to find.
     """
     label_name = None
-    for position in Robot.positions:
+    positions = Robot.get_preset_positions()
+    for position in positions:
         response, camera_metadata = detect_object(object_name)
         # get bounding box coordinates from response
         try:
             json_response = json.loads(response.replace("```json\n", "").replace("```", ""))
             y1, x1, y2, x2 = map(int, json_response[0]['box_2d'])
             label_name = json_response[0]['label']
+            y1 = int(y1/1000.0 * camera_processor.camera_height)
+            x1 = int(x1/1000.0 * camera_processor.camera_width)
+            y2 = int(y2/1000.0 * camera_processor.camera_height)
+            x2 = int(x2/1000.0 * camera_processor.camera_width)
             print(f'{x1}, {y1}, {x2}, {y2}')
             break
         except:
@@ -83,16 +88,15 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
     if label_name is None:
         telegram_bot.send_message(chat_id, "Object not found")
         return
-    
-    # get robot coordinates from bounding box
-    coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
-    # draw square on image with label
-    labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
-    labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
-    #save to pi when debugging camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
-    if coordinates is not None:
+    else:
+        # get robot coordinates from bounding box
+        #coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
+        # draw square on image with label
+        labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
+        labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
+        #save to pi when debugging camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
         telegram_bot.send_photo(chat_id, photo=labeled_image_byte_arr)
-        # commented out while testing hailo_bot.move_to_coordinates(x=coordinates[0], y=coordinates[1], z=coordinates[2], t=1.5)
+        hailo_bot.reset()
 
 def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
     """
