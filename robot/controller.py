@@ -48,6 +48,17 @@ def drop_off_object(location: str):
     hailo_bot.move_to_pick_up_start()
     hailo_bot.hold()
 
+def detect_object(object_name: str):
+    # get image from queue
+    camera_metadata = camera_queue.get()['image']
+    # convert image to byte array
+    image_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'JPEG')
+    # prompt the AI bot to identify the object in the image
+    prompt = f'Detect the 2d bounding boxes of objects matching the description "{object_name}" (only strong matches).'
+    response = ai_chat_bot.get_bbox_coordinates(prompt=prompt,
+                                                data=img)
+    return response, camera_metadata
+
 
 def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
@@ -56,27 +67,27 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
         Args: 
             object_name (str): The name of the object to find.
     """
-    # get image from queue
-    camera_metadata = camera_queue.get()['image']
-    # convert image to byte array
-    image_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'JPEG')
-    # prompt the AI bot to identify the object in the image
-    prompt = f'Detect the 2d bounding boxes of the {object_name} (with “label” as topping description”)'
-    response = ai_chat_bot.get_bbox_coordinates(prompt=prompt,
-                                                data=img)
-    # get bounding box coordinates from response
-    try:
-        json_response = json.loads(response.replace("```json\n", "").replace("```", ""))
-        y1, x1, y2, x2 = map(int, json_response[0]['box_2d'])
-        print(f'{x1}, {y1}, {x2}, {y2}')
-    except ValueError:
-        telegram_bot.send_message(chat_id, 'Could not find object.')
+    label_name = None
+    for position in Robot.positions:
+        response, camera_metadata = detect_object(object_name)
+        # get bounding box coordinates from response
+        try:
+            json_response = json.loads(response.replace("```json\n", "").replace("```", ""))
+            y1, x1, y2, x2 = map(int, json_response[0]['box_2d'])
+            label_name = json_response[0]['label']
+            print(f'{x1}, {y1}, {x2}, {y2}')
+            break
+        except:
+            hailo_bot.move_to_preset_position(position)
+
+    if label_name is None:
+        telegram_bot.send_message(chat_id, "Object not found")
         return
     
     # get robot coordinates from bounding box
     coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
     # draw square on image with label
-    labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), object_name)
+    labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
     labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
     #save to pi when debugging camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
     if coordinates is not None:

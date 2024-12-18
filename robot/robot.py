@@ -44,6 +44,7 @@ class Robot():
             'release': lambda robot: robot.release(),
             'throw': lambda robot: robot.throw()
         }
+    positions = range(1, 6)
 
     def __init__(self, speed: int = 0, acceleration: int = 2, ip_address: str = DEFAULT_ROARM_IP) -> None:
         """
@@ -325,6 +326,25 @@ class Robot():
         """
         self.move_to_position(e=170,b=0,s=-40,delay=1)
 
+    def move_to_preset_position(self, position: int):
+        """
+            Moves the robot to a specific position.
+
+            Args:
+                position (int): The position to move to.
+        """
+        match position:
+            case 1:
+                self.move_to_position(e=60,b=60,h=180,delay=6)
+            case 2:
+                self.move_to_position(e=60,b=-60,delay=6)
+            case 3:
+                self.move_to_position(e=100,b=-60,delay=6)
+            case 4:
+                self.move_to_position(e=100,b=60,delay=6)
+            case 5:
+                self.reset()
+                
     def do_action(self, action: str):
         """
             Performs an action on the robot.
