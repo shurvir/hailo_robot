@@ -128,6 +128,16 @@ class GeminiChat(AIChat):
         return response.text
     
     def get_bbox_coordinates(self, prompt, data):
+        """
+        Generates bounding box coordinates using the model.
+
+        Args:
+            prompt (str): The prompt for the model.
+            data (bytes): The data for the model.
+
+        Returns:
+            str: The response from the model.
+        """
         bounding_box_system_instructions = """
         Return bounding boxes as a JSON array with labels. Never return masks or code fencing. Limit to 25 objects.
         If an object is present multiple times, name them according to their unique characteristic (colors, size, position, unique characteristics, etc..).
