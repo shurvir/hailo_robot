@@ -96,7 +96,6 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
         # draw square on image with label
         labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
         labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
-        #save to pi when debugging camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
         telegram_bot.send_photo(chat_id, photo=labeled_image_byte_arr)
 
 def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
