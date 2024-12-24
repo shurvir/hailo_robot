@@ -37,6 +37,8 @@ class Robot():
             'light_on': lambda robot: robot.set_light(255),
             'light_off': lambda robot: robot.set_light(0),
             'look_around': lambda robot: robot.look_around(),
+            'look_left': lambda robot: robot.move_to_position(b=90,speed=20,delay=6),
+            'look_right': lambda robot: robot.move_to_position(b=-90,speed=20,delay=6),
             'pick_up_start': lambda robot: robot.move_to_pick_up_start(),
             'grab': lambda robot: robot.grab(),
             'reset': lambda robot: robot.reset(),
@@ -47,11 +49,11 @@ class Robot():
     
     _preset_positions_dictionary = {
         1: lambda robot: robot.move_to_position(e=60, b=60, h=180,speed=20,delay=4),
-        2: lambda robot: robot.move_to_position(e=60, b=-60,      speed=20,delay=4),
+        2: lambda robot: robot.move_to_position(e=60, b=-60,      speed=20,delay=6),
         3: lambda robot: robot.move_to_position(e=80, b=0,        speed=20,delay=4),
         4: lambda robot: robot.move_to_position(e=150,b=0,        speed=20,delay=4),
         5: lambda robot: robot.move_to_position(e=100,b=-60,      speed=20,delay=4),
-        6: lambda robot: robot.move_to_position(e=100,b=60,       speed=20,delay=4),
+        6: lambda robot: robot.move_to_position(e=100,b=60,       speed=20,delay=6),
         7: lambda robot: robot.reset(),
     }
 
@@ -147,7 +149,7 @@ class Robot():
         self.do(command)
         time.sleep(delay)
     
-    def move_to_relative_position(self, e:int = 0, b:int = 0, s:int = 0, h:int = 0, speed:int = 20, delay:float = 0):
+    def move_to_relative_position(self, e:int = 0, b:int = 0, s:int = 0, h:int = 0, speed:int = None, delay:float = 0):
         """
             Moves the robot to a relative position.
 
