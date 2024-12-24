@@ -89,14 +89,15 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
         telegram_bot.send_message(chat_id, "Object not found")
         return
     else:
-        # get robot coordinates from bounding box
-        #coordinates = camera_utils.get_robot_coordinates_from_bbox((x1, y1, x2, y2))
+        # move robot to coordinates
+        relative_x, relative_y = camera_utils.get_robot_position_from_bbox((x1, y1, x2, y2), camera_processor.camera_width, camera_processor.camera_height)
+        hailo_bot.move_to_relative_position(b=relative_x, e=relative_y)
+
         # draw square on image with label
         labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
         labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
         #save to pi when debugging camera_utils.save_temp_image(camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2)))
         telegram_bot.send_photo(chat_id, photo=labeled_image_byte_arr)
-        hailo_bot.reset()
 
 def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
     """

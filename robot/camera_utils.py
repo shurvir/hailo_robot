@@ -38,6 +38,26 @@ def get_robot_directions_from_bbox(bbox: np.ndarray) -> Dict:
 
     return instructions
 
+def get_robot_position_from_bbox(bbox: np.ndarray, camera_width: int, camera_height: int) -> Tuple[int, int]:
+    """
+    Converts a bounding box to robot position.
+    
+    Args:
+        bbox: Bounded box coordinates (x1, y1, x2, y2)
+        
+        Returns:
+        Robot position (x, y)
+    """
+    adjusted_x_image =(bbox[2] + bbox[0])/2.0
+    adjusted_y_image = (bbox[3] + bbox[1])/2.0
+
+    x_diff = (adjusted_x_image - camera_width/2.0)
+    y_diff = (adjusted_y_image - camera_height/2.0)
+    x_diff = (-140*x_diff)/(camera_width*2.0)
+    y_diff = (140*y_diff)/(camera_height*2.0)
+
+    return (x_diff, y_diff)
+
 def get_robot_coordinates_from_bbox(bbox: np.ndarray) -> Tuple[int, int, int]:
     """
     Converts a bounding box to robot coordinates.

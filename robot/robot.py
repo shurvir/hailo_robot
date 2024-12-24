@@ -46,11 +46,13 @@ class Robot():
         }
     
     _preset_positions_dictionary = {
-        1: lambda robot: robot.move_to_position(e=60,b=60,h=180,delay=6),
-        2: lambda robot: robot.move_to_position(e=60,b=-60,delay=6),
-        3: lambda robot: robot.move_to_position(e=80,b=0,delay=6),
-        4: lambda robot: robot.move_to_position(e=100,b=-60,delay=6),
-        5: lambda robot: robot.move_to_position(e=100,b=60,delay=6),
+        1: lambda robot: robot.move_to_position(e=60,b=60,h=180,speed=0,delay=4),
+        2: lambda robot: robot.move_to_position(e=60,b=-60,speed=0,delay=4),
+        3: lambda robot: robot.move_to_position(e=80,b=0,speed=0,delay=4),
+        4: lambda robot: robot.move_to_position(e=150,b=0,speed=0,delay=4),
+        5: lambda robot: robot.move_to_position(e=100,b=-60,speed=0,delay=4),
+        6: lambda robot: robot.move_to_position(e=100,b=60,speed=0,delay=4),
+        7: lambda robot: robot.reset(),
     }
 
     def get_preset_positions():
@@ -145,6 +147,31 @@ class Robot():
         self.do(command)
         time.sleep(delay)
     
+    def move_to_relative_position(self, e:int = 0, b:int = 0, s:int = 0, h:int = 0, speed:int = 0, delay:float = 0):
+        """
+            Moves the robot to a relative position.
+
+            Args:
+                e (int): The value of joint e.
+                b (int): The value of joint b.
+                s (int): The value of joint s.
+                h (int): The value of joint h.
+                delay (int): The delay between commands.
+            
+            Returns:
+                None
+        """
+        self._state = self.get_state()
+        e += math.degrees(self._state['e'])
+        b += math.degrees(self._state['b'])
+        s += math.degrees(self._state['s'])
+        h += math.degrees(self._state['t'])
+        if speed is None:
+            speed = self._speed
+        command = f'{{"T":122,"b":{b},"s":{s},"e":{e},"h":{h},"spd":{speed},"acc":{self._acceleration}}}'
+        self.do(command)
+        time.sleep(delay)
+
     def move_to_position(self, e:int = None, b:int = None, s:int = None, h:int = None, speed:int = None, delay:float = 0):
         """
             Moves the robot to a specific position.
