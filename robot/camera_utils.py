@@ -129,6 +129,47 @@ def save_temp_image(image: np.ndarray):
     """
     cv2.imwrite('/home/pi/Documents/hailo_robot/test_data/images/temp.png', image)
 
+def convert_array_image_cv2(image_array, format):
+    """
+    Converts a NumPy array image to a BytesIO object using cv2.imencode.
+
+    Args:
+        image_array: A NumPy array representing the image.
+        format: The format of the image (e.g., 'PNG' or 'JPEG').
+
+    Returns:
+        io.BytesIO: A BytesIO object containing the image data.
+        numpy.ndarray: The image array.
+    """
+    # Convert format string to cv2 format
+    cv2_format = '.' + format.lower()
+    
+    # Encode image to memory buffer
+    success, encoded_img = cv2.imencode(cv2_format, image_array)
+    if not success:
+        raise ValueError("Failed to encode image")
+    
+    return encoded_img.tobytes()
+
+def convert_array_image_PIL(image_array, format):
+    """
+    Converts a NumPy array image to a BytesIO object using PIL.
+
+    Args:
+        image_array: A NumPy array representing the image.
+        format: The format of the image (e.g., 'PNG' or 'JPEG').
+
+    Returns:
+        PIL.Image: The PIL Image object.
+    """
+    # Convert BGR to RGB
+    img_rgb = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+    
+    # Create a PIL Image from the NumPy array
+    img = Image.fromarray(img_rgb)
+    
+    return img
+
 def convert_array_image(image_array, format):
     """
     Converts a NumPy array image to a BytesIO object.

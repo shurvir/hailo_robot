@@ -28,8 +28,8 @@ class Robot():
                           'forward': {'joint_letter': 's', 'sign': +1, 'joint_index': 2},
                          'backward': {'joint_letter': 's', 'sign': -1, 'joint_index': 2}}
     _action_dictionary = {
-            'turn_left': lambda robot: robot.move_left(15),
-            'turn_right': lambda robot: robot.move_right(15),
+            'go_left': lambda robot: robot.move_left(15),
+            'go_right': lambda robot: robot.move_right(15),
             'go_up': lambda robot: robot.move_up(15),
             'go_down': lambda robot: robot.move_down(15),
             'go_forward': lambda robot: robot.move_forward(15),

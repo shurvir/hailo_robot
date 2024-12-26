@@ -52,7 +52,7 @@ def detect_object(object_name: str):
     # get image from queue
     camera_metadata = camera_queue.get()['image']
     # convert image to byte array
-    _, img = camera_utils.convert_array_image(camera_metadata, 'JPEG')
+    img = camera_utils.convert_array_image_PIL(camera_metadata, 'JPEG')
     # prompt the AI bot to identify the object in the image
     prompt = f'Detect the 2d bounding boxes of objects matching the description "{object_name}" (only strong matches).'
     response = ai_chat_bot.get_bbox_coordinates(prompt=prompt,
@@ -95,8 +95,8 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
 
         # draw square on image with label
         labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
-        labeled_image_byte_arr, _ = camera_utils.convert_array_image(labeled_image, 'PNG')
-        telegram_bot.send_photo(chat_id, photo=labeled_image_byte_arr)
+        labeled_image_bytes = camera_utils.convert_array_image_cv2(labeled_image, 'PNG')
+        telegram_bot.send_photo(chat_id, photo=labeled_image_bytes)
 
 def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
     """
