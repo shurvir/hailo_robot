@@ -25,6 +25,7 @@ google-auth==2.35.0
 google-auth-httplib2==0.2.0
 google-cloud-speech==2.27.0
 google-generativeai==0.8.3
+google-genai==0.2.2
 googleapis-common-protos==1.65.0
 grpcio==1.66.2
 grpcio-status==1.66.2
