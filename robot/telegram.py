@@ -3,7 +3,6 @@ import telebot
 import os
 from robot import Robot
 import controller
-import asyncio
 
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 ROBOT_COMMANDS = Robot.get_actions()

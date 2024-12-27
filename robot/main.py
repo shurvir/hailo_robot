@@ -7,6 +7,7 @@ import controller
 import telegram
 import threading
 import queue
+import time
 
 def initialize_arg_parser() -> argparse.ArgumentParser:
     """Initialize argument parser for the script."""
@@ -44,9 +45,8 @@ def main() -> None:
     camera_thread: threading.Thread = threading.Thread(target=camera_processor.run, args=(args.net, args.labels, args.score_thresh))
     camera_thread.start()
 
-    telegram.telegram_bot.stop_polling()
-    telegram_thread.join()
     camera_thread.join()
+    telegram.telegram_bot.stop_polling()
 
 if __name__ == "__main__":
     main()
