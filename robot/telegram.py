@@ -28,6 +28,10 @@ def do_robot_action(message):
 def send_camera_metadata(message):
     controller.get_camera_metadata(telegram_bot, message.chat.id)
 
+@telegram_bot.message_handler(commands=['get_camera_image'])
+def send_camera_image(message):
+    controller.get_camera_image(telegram_bot, message.chat.id)
+
 @telegram_bot.message_handler(commands=['get_scene'])
 def describe_scene(message):
     controller.get_scene(telegram_bot, message.chat.id)

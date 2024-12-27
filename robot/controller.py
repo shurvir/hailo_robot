@@ -112,6 +112,15 @@ def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
         telegram_bot.send_photo(chat_id, photo=img_byte_arr)
         telegram_bot.send_message(chat_id, description)
 
+def get_camera_image(telegram_bot: telebot.TeleBot, chat_id: int):
+    """
+        Returns an image from the camera
+    """
+    if camera_queue is not None:
+        camera_metadata = camera_queue.get()['image']
+        img_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'PNG')
+        telegram_bot.send_photo(chat_id, photo=img_byte_arr)
+        
 def get_scene(telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Returns a video of the scene
