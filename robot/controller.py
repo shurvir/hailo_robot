@@ -112,6 +112,21 @@ def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
         telegram_bot.send_photo(chat_id, photo=img_byte_arr)
         telegram_bot.send_message(chat_id, description)
 
+def get_scene(telegram_bot: telebot.TeleBot, chat_id: int):
+    """
+        Returns a video of the scene
+    """
+    if video_queue is not None:
+        image_array = []
+        while not video_queue.empty():
+            image_array.append(video_queue.get()['image'])
+        
+        video_data = camera_utils.create_mp4_from_images(image_array)
+        video_data.seek(0)
+
+        if video_data is not None:
+            telegram_bot.send_video(chat_id=chat_id, video=video_data)
+
 def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.
@@ -206,6 +221,22 @@ def send_action_to_robot(message):
             message (str): The action to send to the robot.
     """
     hailo_bot.do_action(message)
+
+def list_commands(telegram_bot: telebot.TeleBot, chat_id: int):
+    """
+        Lists the available commands
+    """
+    telegram_bot.send_message(chat_id, "Available commands: ")
+    for command in ROBOT_COMMANDS:
+        telegram_bot.send_message(chat_id, f"/{command}")
+    telegram_bot.send_message(chat_id, "/pick_up <object_name>")
+    telegram_bot.send_message(chat_id, "/drop_off <location>")
+    telegram_bot.send_message(chat_id, "/find <object_name>")
+    telegram_bot.send_message(chat_id, "/get_camera_metadata")
+    telegram_bot.send_message(chat_id, "/get_scene")
+    telegram_bot.send_message(chat_id, "/describe_scene")
+    telegram_bot.send_message(chat_id, "/track_object <object_name> <object_id>")
+    telegram_bot.send_message(chat_id, "/list_commands")
 
 def track(object_name, object_id):
     global tracking

@@ -27,10 +27,18 @@ def do_robot_action(message):
 @telegram_bot.message_handler(commands=['get_camera_metadata'])
 def send_camera_metadata(message):
     controller.get_camera_metadata(telegram_bot, message.chat.id)
-        
+
+@telegram_bot.message_handler(commands=['get_scene'])
+def describe_scene(message):
+    controller.get_scene(telegram_bot, message.chat.id)
+
 @telegram_bot.message_handler(commands=['describe_scene'])
 def describe_scene(message):
     controller.describe_scene(telegram_bot, message.chat.id)
+
+@telegram_bot.message_handler(commands=['list_commands'])
+def list_commands(message):
+    controller.list_commands(telegram_bot, message.chat.id)
 
 @telegram_bot.message_handler(commands=['track_object'])
 def track_object(message):
