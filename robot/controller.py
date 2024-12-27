@@ -120,7 +120,7 @@ def get_camera_image(telegram_bot: telebot.TeleBot, chat_id: int):
         camera_metadata = camera_queue.get()['image']
         img_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'PNG')
         telegram_bot.send_photo(chat_id, photo=img_byte_arr)
-        
+
 def get_scene(telegram_bot: telebot.TeleBot, chat_id: int):
     """
         Returns a video of the scene
@@ -242,6 +242,7 @@ def list_commands(telegram_bot: telebot.TeleBot, chat_id: int):
     telegram_bot.send_message(chat_id, "/drop_off <location>")
     telegram_bot.send_message(chat_id, "/find <object_name>")
     telegram_bot.send_message(chat_id, "/get_camera_metadata")
+    telegram_bot.send_message(chat_id, "/get_camera_image")
     telegram_bot.send_message(chat_id, "/get_scene")
     telegram_bot.send_message(chat_id, "/describe_scene")
     telegram_bot.send_message(chat_id, "/track_object <object_name> <object_id>")
