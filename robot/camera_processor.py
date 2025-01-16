@@ -161,7 +161,7 @@ def get_coordinates_of_object(object_name: str, detection_results: sv.Detections
 
     return None
     
-def run(hef_path: str, labels_path: str, score_thresh: float = 0.5):
+def run(hef_path: str, labels_path: str, score_thresh: float = 0.5, annotations: bool = True):
     input_queue: queue.Queue = queue.Queue()
     output_queue: queue.Queue = queue.Queue()
 
@@ -217,7 +217,7 @@ def run(hef_path: str, labels_path: str, score_thresh: float = 0.5):
         )
 
         # Check if any detections were found
-        if detections["num_detections"] > 0: 
+        if detections["num_detections"] > 0 and annotations: 
             # Postprocess the detections and annotate the frame
             annotated_labeled_frame, sv_detections = postprocess_detections(
                 image, detections, class_names, tracker, box_annotator, label_annotator

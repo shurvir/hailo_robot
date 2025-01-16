@@ -23,6 +23,9 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-s", "--score_thresh", type=float, default=0.25, help="Score threshold - between 0 and 1."
     )
+    parser.add_argument(
+        "-a", "--annotations", action="store_true", help="Annotations Flag True or False."
+    )
     return parser
 
 def main() -> None:
@@ -42,7 +45,7 @@ def main() -> None:
     telegram_thread.start()
 
     # Start the camera listener
-    camera_thread: threading.Thread = threading.Thread(target=camera_processor.run, args=(args.net, args.labels, args.score_thresh))
+    camera_thread: threading.Thread = threading.Thread(target=camera_processor.run, args=(args.net, args.labels, args.score_thresh, args.annotations))
     camera_thread.start()
 
     camera_thread.join()

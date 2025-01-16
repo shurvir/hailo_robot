@@ -208,4 +208,3 @@ class GeminiChat(AIChat):
             raise ValueError(video_file.state.name)
 
         return video_file
-
