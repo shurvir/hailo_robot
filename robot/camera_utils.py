@@ -53,7 +53,7 @@ def get_robot_position_from_bbox(bbox: np.ndarray, camera_width: int, camera_hei
 
     x_diff = (adjusted_x_image - camera_width/2.0)
     y_diff = (adjusted_y_image - camera_height/2.0)
-    x_diff = (-140*x_diff)/(camera_width*2.0)
+    x_diff = (-180*x_diff)/(camera_width*2.0)
     y_diff = (140*y_diff)/(camera_height*2.0)
 
     return (x_diff, y_diff)
