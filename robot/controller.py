@@ -160,6 +160,7 @@ def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
         if video_data is not None:
             telegram_bot.send_video(chat_id=chat_id, video=video_data)
             telegram_bot.send_message(chat_id, description)
+            ai_chat_bot.send_message(description)
     
 def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """

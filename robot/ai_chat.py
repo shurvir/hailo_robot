@@ -153,7 +153,7 @@ class GeminiChat(AIChat):
 
         return response.text
     
-    def generate_content_from_video(self, video_data, prompt, mime_type="video/mp4"):
+    def generate_content_from_video(self, video_data, prompt, mime_type="video/mp4", video_file=None):
         """
         Generates content using the model.
         
@@ -164,7 +164,8 @@ class GeminiChat(AIChat):
         Returns:
             str: The response from the model.
         """
-        video_file = self.upload_bytes_as_video_file(video_data, mime_type)
+        if video_file is None:
+            video_file = self.upload_bytes_as_video_file(video_data, mime_type)
         response = self._client.models.generate_content(
             model=self._model_name,
             contents=[
@@ -180,7 +181,7 @@ class GeminiChat(AIChat):
         )
         return response.text
     
-    def upload_bytes_as_video_file(self, bytes_data, mime_type):
+    def upload_bytes_as_video_file(self, bytes_data):
         """Uploads bytes data as a file to Gemini.
 
         Args:
