@@ -165,7 +165,7 @@ class GeminiChat(AIChat):
             str: The response from the model.
         """
         if video_file is None:
-            video_file = self.upload_bytes_as_video_file(video_data, mime_type)
+            video_file = self.upload_bytes_as_video_file(video_data)
         response = self._client.models.generate_content(
             model=self._model_name,
             contents=[
