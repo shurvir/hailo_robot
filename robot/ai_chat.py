@@ -1,11 +1,13 @@
 from google import genai
 from google.genai import types
+from ollama import chat
 import tempfile
 import os
 import time
 from google.cloud import speech
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+DEEP_SEEK_API_KEY = os.environ.get('DEEP_SEEK_API_KEY')
 
 def transcribe_audio_bytes(audio_bytes, language_code="en-US"):
   """
@@ -45,6 +47,57 @@ class AIChat():
 
     def send_message(self, message):
         pass
+
+    def generate_content(self, prompt, mime_type, data):
+        pass
+
+    def generate_content_from_video(self, video_data, prompt):
+        pass
+
+    def get_bbox_coordinates(self, prompt, mime_type, data):
+        pass
+
+class DeepSeekChat(AIChat):
+
+    _history: None
+    _model:str = 'deepseek-r1:1.5b'
+    
+    def __init__(self):
+        
+        system_instruction="""
+        I want you to behave as though you are a robot arm with audio visual capabilities.
+        I have connected you to a physical robotic arm so any instructions I tell you, are carried out by the physical arm.
+        Your text output is played into my living area via Speech to Text.
+        Your name is Sharkie.
+        Have a serious tone and don't make robot noises.
+        """
+        messages = [
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": "Hello"},
+                ]
+        
+        chat(
+            self._model,
+            messages=messages,
+                stream=False
+        )
+
+        self._history = messages
+
+    def send_message(self, message):
+        messages = self._history
+        messages.append({"role": "user", "content": message})
+        response = chat(
+            self._model,
+            messages=messages,
+            stream=False
+        )
+        messages += [
+            {'role': 'assistant', 'content': response.message.content},
+        ]
+        self._history = messages
+
+        return response.message.content
 
     def generate_content(self, prompt, mime_type, data):
         pass

@@ -52,6 +52,8 @@ numba==0.60.0
 numpy==1.23.5
 onnxruntime==1.19.2
 openai-whisper==20240930
+openai==1.60.2
+ollama==0.4.7
 opencv-python-headless==4.10.0.84
 packaging==24.1
 pandas==2.2.3
