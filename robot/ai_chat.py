@@ -127,7 +127,7 @@ class GeminiChat(AIChat):
         Initializes a new instance of the GeminiChat class.
         """
         self._client = genai.Client(api_key=GEMINI_API_KEY)
-        self._model_name = "gemini-2.0-flash-exp"
+        self._model_name = "gemini-2.5-flash"
 
         system_instruction="""
         I want you to behave as though you are a robot arm with audio visual capabilities.
