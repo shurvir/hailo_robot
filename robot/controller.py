@@ -198,6 +198,9 @@ def map_instruction_to_action(instruction: str, telegram_bot: telebot.TeleBot, c
     elif command_string == 'get_camera_metadata':
         get_camera_metadata(telegram_bot, chat_id)
         return 'get camera metadata'
+    elif command_string.startswith('find') and len(list_of_commands) > 1:
+        find_object((' '.join(list_of_commands[1:])).strip('.'), telegram_bot, chat_id)
+        return 'find object'
     else:
         return None
 
