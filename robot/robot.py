@@ -57,6 +57,181 @@ class Robot():
         7: lambda robot: robot.reset(),
     }
 
+    _function_declarations = [
+        {
+            "name": "move_to_position",
+            "description": "Moves the robot arm to a specific position defined by joint angles.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "e": {
+                        "type": "integer",
+                        "description": "The angle in degrees for the elbow joint."
+                    },
+                    "b": {
+                        "type": "integer",
+                        "description": "The angle in degrees for the base joint."
+                    },
+                    "s": {
+                        "type": "integer",
+                        "description": "The angle in degrees for the shoulder joint."
+                    },
+                    "h": {
+                        "type": "integer",
+                        "description": "The angle in degrees for the hand/wrist joint."
+                    },
+                    "speed": {
+                        "type": "integer",
+                        "description": "The speed of the movement."
+                    },
+                    "delay": {
+                        "type": "number",
+                        "description": "The delay in seconds after the command is sent."
+                    }
+                },
+                "required": []
+            }
+        },
+        {
+            "name": "move_to_relative_position",
+            "description": "Moves the robot arm to a position relative to its current joint angles.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "e": {
+                        "type": "integer",
+                        "description": "The relative angle in degrees to move the elbow joint."
+                    },
+                    "b": {
+                        "type": "integer",
+                        "description": "The relative angle in degrees to move the base joint."
+                    },
+                    "s": {
+                        "type": "integer",
+                        "description": "The relative angle in degrees to move the shoulder joint."
+                    },
+                    "h": {
+                        "type": "integer",
+                        "description": "The relative angle in degrees to move the hand/wrist joint."
+                    },
+                    "speed": {
+                        "type": "integer",
+                        "description": "The speed of the movement."
+                    },
+                    "delay": {
+                        "type": "number",
+                        "description": "The delay in seconds after the command is sent."
+                    }
+                },
+                "required": []
+            }
+        },
+        {
+            "name": "move",
+            "description": "Moves the robot in a specific direction by a certain number of degrees.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "degrees": {
+                        "type": "integer",
+                        "description": "The number of degrees to move."
+                    },
+                    "direction": {
+                        "type": "string",
+                        "description": "The direction to move.",
+                        "enum": ["up", "down", "left", "right", "forward", "backward"]
+                    },
+                    "delay": {
+                        "type": "number",
+                        "description": "The delay in seconds after the command is sent."
+                    }
+                },
+                "required": ["degrees", "direction"]
+            }
+        },
+        {
+            "name": "set_light",
+            "description": "Sets the intensity of the robot's light.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "intensity": {
+                        "type": "integer",
+                        "description": "The intensity of the light, from 0 (off) to 255 (full)."
+                    }
+                },
+                "required": ["intensity"]
+            }
+        },
+        {
+            "name": "grab",
+            "description": "Opens and then closes the robot's gripper to grab an object.",
+            "parameters": {"type": "object", "properties": {}}
+        },
+        {
+            "name": "release",
+            "description": "Opens the robot's gripper.",
+            "parameters": {"type": "object", "properties": {}}
+        },
+        {
+            "name": "reset",
+            "description": "Resets the robot to its initial, default state.",
+            "parameters": {"type": "object", "properties": {}}
+        },
+        {
+            "name": "throw",
+            "description": "Performs a sequence of movements to throw an object held in the gripper.",
+            "parameters": {"type": "object", "properties": {}}
+        },
+        {
+            "name": "look_around",
+            "description": "Performs a pre-programmed sequence of movements to 'look around'.",
+            "parameters": {"type": "object", "properties": {}}
+        },
+        {
+            "name": "move_to_preset_position",
+            "description": "Moves the robot to a pre-defined numbered position.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "position": {
+                        "type": "integer",
+                        "description": "The preset position number to move to."
+                    }
+                },
+                "required": ["position"]
+            }
+        },
+        {
+            "name": "do_action",
+            "description": "Performs a named action on the robot from a list of available actions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "description": "The name of the action to perform.",
+                        "enum": [
+                            "go_left", "go_right", "go_up", "go_down", "go_forward", "go_backward",
+                            "light_on", "light_off", "look_around", "look_left", "look_right",
+                            "pick_up_start", "grab", "reset", "hold", "release", "throw"
+                        ]
+                    }
+                },
+                "required": ["action"]
+            }
+        }
+    ]
+    
+    def get_function_declarations():
+        """
+            Returns the function declarations for the robot actions.
+
+            Returns:
+                list: The list of function declarations.
+        """
+        return Robot._function_declarations
+    
     def get_preset_positions():
         """
             Returns the list of available presets.

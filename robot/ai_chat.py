@@ -122,7 +122,7 @@ class GeminiChat(AIChat):
     _chat = None
     _model_name: str
 
-    def __init__(self):
+    def __init__(self, robot_function_declarations=None):
         """
         Initializes a new instance of the GeminiChat class.
         """
@@ -141,7 +141,15 @@ class GeminiChat(AIChat):
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 temperature=0.5,
-            ),
+                tools=[types.Tool(function_declarations=robot_function_declarations)],
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=True
+                ),
+                # Force the model to call 'any' function, instead of chatting.
+                tool_config=types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode='AUTO')
+                ),
+            )
         )
     
     def send_message(self, message: str):
@@ -156,6 +164,14 @@ class GeminiChat(AIChat):
         """
         response = self._chat.send_message(message)
         output_message = response.text
+
+        # print funtion calls for testing
+        if response.function_calls is not None:
+            output_message = ''
+            for function_call in response.function_calls:
+                args = ", ".join(f"{key}={val}" for key, val in function_call.args.items())
+                output_message += f"{function_call.name}({args})"
+
         return output_message
     
     def generate_content(self, prompt, data):
