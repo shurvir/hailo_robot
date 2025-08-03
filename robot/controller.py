@@ -101,7 +101,22 @@ _controller_tools = [
             },
             "required": ["object_name", "object_id"]
         }
-    }
+    },
+    {
+        "name": "send_action_to_robot",
+        "description": "Sends an action to the robot",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "The action to send to the robot.",
+                    "enum": Robot.get_actions()
+                }
+            },
+            "required": ["message"]
+        }
+    },
 ]
 
 def pick_up_object(object_name: str):
@@ -281,6 +296,7 @@ def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int
                 # Execute the function
                 try:
                     # We don't capture the return value for now, just execute
+                    print(f"Executing function: {func_name} with args: {execution_args}")
                     func(**execution_args)
                     output_message += f"Executed function: {func_name}"
                 except Exception as e:
@@ -336,15 +352,8 @@ def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
     #transcription = ai_chat_bot.generate_content(prompt=prompt, mime_type="audio/ogg", data=downloaded_file)
     #transcription = ai_chat.transcribe_ogg_bytes(downloaded_file)
     transcription = ai_chat.transcribe_audio_bytes(downloaded_file)
-
     print(f'transcription: {transcription}')
-
-    if map_instruction_to_action(transcription, telegram_bot, chat_id) is None:
-        # Respond
-        response = ai_chat_bot.send_message(transcription)
-        # Send response to the chat
-        telegram_bot.send_message(chat_id, response)
-        asyncio.run(say(response.replace('*','')))
+    send_message_to_AI(transcription, telegram_bot, chat_id)
 
 def send_action_to_robot(message):
     """
