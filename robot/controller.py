@@ -9,15 +9,100 @@ import asyncio
 import time
 from robot import Robot
 import json
+from google.genai import types
+import inspect
 
-BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-bot = telebot.TeleBot(BOT_TOKEN)
-hailo_bot = Robot(speed=20, acceleration=10)
-ROBOT_COMMANDS = Robot.get_actions()
-ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat(Robot.get_function_declarations())
-camera_queue = None
-video_queue = None
-tracking = False
+_controller_tools = [
+    {
+        "name": "pick_up_object",
+        "description": "Tells the robot to pick up the object input in the object_name parameter",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "object_name": {
+                    "type": "string",
+                    "description": "The name of the object to pick up."
+                }
+            },
+            "required": ["object_name"]
+        }
+    },
+    {
+        "name": "find_object",
+        "description": "Tells the robot to find the object input in the object_name parameter",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "object_name": {
+                    "type": "string",
+                    "description": "The name of the object to find."
+                }
+            },
+            "required": ["object_name"]
+        }
+    },
+    {
+        "name": "get_scene",
+        "description": "Returns a video of the scene",
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    {   "name": "describe_scene",
+        "description": "Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.",
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    {   "name": "get_camera_metadata",
+        "description": "Returns the camera metadata",
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    {   "name": "get_camera_image",
+        "description": "Returns an image from the camera",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+        }
+    },
+    {   "name": "drop_off_object",
+        "description": "Tells the robot to drop off the object",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The location to drop off the object (left, right, behind).",
+                    "enum": ["left", "right", "behind"]
+                }
+            },
+            "required": ["location"]
+        }
+    },
+    {
+        "name": "track",
+        "description": "Tells the robot to track the object input in the object_name parameter",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "object_name": {
+                    "type": "string",
+                    "description": "The name of the object to track."
+                },
+                "object_id": {
+                    "type": "string",
+                    "description": "The ID of the object to track."
+                }
+            },
+            "required": ["object_name", "object_id"]
+        }
+    }
+]
 
 def pick_up_object(object_name: str):
     """
@@ -170,8 +255,43 @@ def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int
             message (str): The message to send to the AI chat bot.
     """
     response = ai_chat_bot.send_message(message)
-    telegram_bot.send_message(chat_id, response)
-    asyncio.run(say(response.replace('*','')))
+    output_message = response.text
+    
+    # execute any function calls in the response
+    if response.function_calls is not None:
+        output_message = ''
+        for function_call in response.function_calls:
+            func_name = function_call.name
+            args = function_call.args
+            
+            # Get the function from the current script's globals
+            func = globals().get(func_name)
+
+            if func:
+                # Create a copy of args to avoid modifying the original
+                execution_args = dict(args)
+                
+                # Add telegram_bot and chat_id to execution args if the function needs them
+                sig = inspect.signature(func)
+                if 'telegram_bot' in sig.parameters:
+                    execution_args['telegram_bot'] = telegram_bot
+                if 'chat_id' in sig.parameters:
+                    execution_args['chat_id'] = chat_id
+                
+                # Execute the function
+                try:
+                    # We don't capture the return value for now, just execute
+                    func(**execution_args)
+                    output_message += f"Executed function: {func_name}"
+                except Exception as e:
+                    output_message += f"Error executing function {func_name}: {e}"
+            else:
+                # Fallback for functions not found (using original args for display)
+                args_str = ", ".join(f"{key}={val}" for key, val in args.items())
+                output_message += f"Function call: {func_name}({args_str})"
+
+    telegram_bot.send_message(chat_id, output_message)
+    asyncio.run(say(output_message.replace('*','')))
 
 def map_instruction_to_action(instruction: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
@@ -277,3 +397,13 @@ def track(object_name, object_id):
                     tracking = False
                     break
             time.sleep(0.25)
+
+BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+bot = telebot.TeleBot(BOT_TOKEN)
+hailo_bot = Robot(speed=20, acceleration=10)
+ROBOT_COMMANDS = Robot.get_actions()
+controller_tools = [types.Tool(function_declarations=_controller_tools)]
+ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat(controller_tools)
+camera_queue = None
+video_queue = None
+tracking = False
