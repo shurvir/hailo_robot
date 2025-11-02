@@ -264,7 +264,7 @@ class GeminiChat(AIChat):
             temp_file_path = temp_file.name
 
         # Now use the temporary file path to upload
-        video_file = self._client.files.upload(path=temp_file_path)
+        video_file = self._client.files.upload(file=temp_file_path)
         os.remove(temp_file_path)
 
         # Check upload status
