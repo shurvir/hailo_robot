@@ -407,12 +407,12 @@ def track(object_name, object_id):
                     break
             time.sleep(0.25)
 
+# Initialize the bot and robot
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 hailo_bot = Robot(speed=20, acceleration=10)
 ROBOT_COMMANDS = Robot.get_actions()
-controller_tools = [types.Tool(function_declarations=_controller_tools)]
-ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat(controller_tools)
+ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat(_controller_tools)
 camera_queue = None
 video_queue = None
 tracking = False

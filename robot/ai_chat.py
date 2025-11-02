@@ -135,17 +135,24 @@ class GeminiChat(AIChat):
         Your text output is played into my living area via Speech to Text.
         Your name is Sharkie.
         Have a serious tone and don't make robot noises.
+        You may also provide general information based on the user's requests.
+        You have access to the internet and can search for information. 
         """
+
+        tools = [{'google_search': {}}]
+        if controller_tools is not None:
+            tools = [{'function_declarations': controller_tools}]
+        
+
         self._chat = self._client.chats.create(
             model=self._model_name,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 temperature=0.5,
-                tools=controller_tools,
+                tools=tools,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
                     disable=True
                 ),
-                # Force the model to call 'any' function, instead of chatting.
                 tool_config=types.ToolConfig(
                     function_calling_config=types.FunctionCallingConfig(mode='AUTO')
                 ),
