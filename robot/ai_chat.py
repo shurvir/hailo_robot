@@ -139,10 +139,20 @@ class GeminiChat(AIChat):
         You have access to the internet and can search for information. 
         """
 
+        # Default to no tools. If controller_tools is provided, expose them
+        # as function_declarations so Gemini can call the functions.
         tools = [{'google_search': {}}]
         if controller_tools is not None:
             tools = [{'function_declarations': controller_tools}]
-        
+
+        # Only set tool_config (function calling) when function_declarations
+        # are supplied. Setting FunctionCallingConfig without function_declarations
+        # leads to a 400 INVALID_ARGUMENT from the API.
+        tool_cfg = None
+        if controller_tools is not None:
+            tool_cfg = types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(mode='AUTO')
+            )
 
         self._chat = self._client.chats.create(
             model=self._model_name,
@@ -153,9 +163,7 @@ class GeminiChat(AIChat):
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
                     disable=True
                 ),
-                tool_config=types.ToolConfig(
-                    function_calling_config=types.FunctionCallingConfig(mode='AUTO')
-                ),
+                tool_config=tool_cfg,
             )
         )
     

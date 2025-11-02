@@ -7,4 +7,4 @@ def chat():
 
 def test_send_message(chat):
     response = chat.send_message('respond with hello')
-    assert response == 'Hello.\n'
+    assert response.text == 'Hello.'
