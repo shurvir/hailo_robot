@@ -11,142 +11,58 @@ from robot import Robot
 import json
 from google.genai import types
 import inspect
+from functools import wraps
 
-_controller_tools = [
-    {
-        "name": "pick_up_object",
-        "description": "Tells the robot to pick up the object input in the object_name parameter",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "object_name": {
-                    "type": "string",
-                    "description": "The name of the object to pick up."
-                }
-            },
-            "required": ["object_name"]
-        }
-    },
-    {
-        "name": "find_object",
-        "description": "Tells the robot to find the object input in the object_name parameter",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "object_name": {
-                    "type": "string",
-                    "description": "The name of the object to find."
-                }
-            },
-            "required": ["object_name"]
-        }
-    },
-    {
-        "name": "get_scene",
-        "description": "Returns a video of the scene",
-        "parameters": {
-            "type": "object",
-            "properties": {}
-        }
-    },
-    {   "name": "describe_scene",
-        "description": "Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.",
-        "parameters": {
-            "type": "object",
-            "properties": {}
-        }
-    },
-    {   "name": "get_camera_metadata",
-        "description": "Returns the camera metadata",
-        "parameters": {
-            "type": "object",
-            "properties": {}
-        }
-    },
-    {   "name": "get_camera_image",
-        "description": "Returns an image from the camera",
-        "parameters": {
-            "type": "object",
-            "properties": {},
-        }
-    },
-    {   "name": "drop_off_object",
-        "description": "Tells the robot to drop off the object",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "The location to drop off the object (left, right, behind).",
-                    "enum": ["left", "right", "behind"]
-                }
-            },
-            "required": ["location"]
-        }
-    },
-    {
-        "name": "track",
-        "description": "Tells the robot to track the object input in the object_name parameter",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "object_name": {
-                    "type": "string",
-                    "description": "The name of the object to track."
-                },
-                "object_id": {
-                    "type": "string",
-                    "description": "The ID of the object to track."
-                }
-            },
-            "required": ["object_name", "object_id"]
-        }
-    },
-    {
-        "name": "send_action_to_robot",
-        "description": "Sends an action to the robot",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "description": "The action to send to the robot.",
-                    "enum": Robot.get_actions()
-                }
-            },
-            "required": ["message"]
-        }
-    },
-]
+# Global context for current request (telegram_bot and chat_id)
+_current_context = {"telegram_bot": None, "chat_id": None}
 
-def pick_up_object(object_name: str):
+# Controller tools are now defined as actual Python functions below
+# The Gemini SDK will automatically convert them to function declarations
+
+def pick_up_object(object_name: str) -> dict:
     """
-        Tells the robot to pick up the object input in the object_name parameter
+    Tells the robot to pick up the object input in the object_name parameter.
 
-        Args: 
-            object_name (str): The name of the object to pick up.
+    Args: 
+        object_name: The name of the object to pick up.
+        
+    Returns:
+        A dictionary with status and message about the pickup operation.
     """
     camera_metadata = camera_queue.get()
     coordinates = camera_processor.get_coordinates_of_object(object_name, camera_metadata['detections'])
     print(coordinates)
     if coordinates is not None:
         hailo_bot.move_to_coordinates_for_pickup(x=coordinates[0], y=coordinates[1], z=coordinates[2])
+        return {"status": "success", "message": f"Picked up {object_name}"}
+    
+    return {"status": "error", "message": f"Could not find coordinates for {object_name}"}
 
-def drop_off_object(location: str):
+def drop_off_object(location: str) -> dict:
     """
-        Tells the robot to drop off the object
+    Tells the robot to drop off the object at the specified location.
+    
+    Args:
+        location: The location to drop off the object (left, right, or behind).
+        
+    Returns:
+        A dictionary with status and message about the drop-off operation.
     """
-    hailo_bot.move_up(90,delay=3)
+    hailo_bot.move_up(90, delay=3)
     if location.lower() == 'left':
         hailo_bot.move_to_coordinates(x=-100, y=600, z=200, delay=5)
     elif location.lower() == 'right':
         hailo_bot.move_to_coordinates(x=-100, y=-600, z=200, delay=5)
     elif location.lower() == 'behind':
         hailo_bot.move_to_coordinates(x=-600, y=0, z=200, delay=8)
+    else:
+        return {"status": "error", "message": f"Invalid location: {location}. Use left, right, or behind."}
     
     hailo_bot.release()
     hailo_bot.move_to_pick_up_start()
     hailo_bot.hold()
+    
+    return {"status": "success", "message": f"Dropped off object at {location}"}
 
 def detect_object(object_name: str):
     # get image from queue
@@ -160,13 +76,19 @@ def detect_object(object_name: str):
     return response, camera_metadata
 
 
-def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
+def find_object(object_name: str) -> dict:
     """
-        Tell the AI bot to identify an object on the camera and send a photo to the telegram chat
+    Tell the AI bot to identify an object on the camera and send a photo to the telegram chat.
 
-        Args: 
-            object_name (str): The name of the object to find.
+    Args: 
+        object_name: The name of the object to find.
+        
+    Returns:
+        A dictionary with status and message about the operation.
     """
+    telegram_bot = _current_context.get("telegram_bot")
+    chat_id = _current_context.get("chat_id")
+    
     label_name = None
     positions = Robot.get_preset_positions()
     for position in positions:
@@ -186,8 +108,9 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
             hailo_bot.move_to_preset_position(position)
 
     if label_name is None:
-        telegram_bot.send_message(chat_id, "Object not found")
-        return
+        if telegram_bot and chat_id:
+            telegram_bot.send_message(chat_id, "Object not found")
+        return {"status": "not_found", "message": f"Object '{object_name}' not found"}
     else:
         # move robot to coordinates
         relative_x, relative_y = camera_utils.get_robot_position_from_bbox((x1, y1, x2, y2), camera_processor.camera_width, camera_processor.camera_height)
@@ -196,12 +119,21 @@ def find_object(object_name: str, telegram_bot: telebot.TeleBot, chat_id: int):
         # draw square on image with label
         labeled_image = camera_utils.draw_square_on_image(camera_metadata, (x1, y1, x2, y2), label_name)
         labeled_image_bytes = camera_utils.convert_array_image_cv2(labeled_image, 'PNG')
-        telegram_bot.send_photo(chat_id, photo=labeled_image_bytes)
+        if telegram_bot and chat_id:
+            telegram_bot.send_photo(chat_id, photo=labeled_image_bytes)
+        
+        return {"status": "success", "message": f"Found {label_name} and moved robot to position"}
 
-def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
+def get_camera_metadata() -> dict:
     """
-        Returns the camera metadata
+    Returns the camera metadata with a description of the image.
+    
+    Returns:
+        A dictionary with the image description.
     """
+    telegram_bot = _current_context.get("telegram_bot")
+    chat_id = _current_context.get("chat_id")
+    
     if camera_queue is not None:
         camera_metadata = camera_queue.get()['image']
         img_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'PNG')
@@ -209,22 +141,43 @@ def get_camera_metadata(telegram_bot: telebot.TeleBot, chat_id: int):
         # Get VN response
         description = ai_chat_bot.generate_content(prompt="Describe this image.", data=img)
 
-        telegram_bot.send_photo(chat_id, photo=img_byte_arr)
-        telegram_bot.send_message(chat_id, description)
+        if telegram_bot and chat_id:
+            telegram_bot.send_photo(chat_id, photo=img_byte_arr)
+            telegram_bot.send_message(chat_id, description)
+        
+        return {"description": description}
+    
+    return {"description": "No camera data available"}
 
-def get_camera_image(telegram_bot: telebot.TeleBot, chat_id: int):
+def get_camera_image() -> dict:
     """
-        Returns an image from the camera
+    Returns an image from the camera.
+    
+    Returns:
+        A dictionary with status of the operation.
     """
+    telegram_bot = _current_context.get("telegram_bot")
+    chat_id = _current_context.get("chat_id")
+    
     if camera_queue is not None:
         camera_metadata = camera_queue.get()['image']
         img_byte_arr, img = camera_utils.convert_array_image(camera_metadata, 'PNG')
-        telegram_bot.send_photo(chat_id, photo=img_byte_arr)
+        if telegram_bot and chat_id:
+            telegram_bot.send_photo(chat_id, photo=img_byte_arr)
+        return {"status": "success", "message": "Image captured and sent"}
+    
+    return {"status": "error", "message": "No camera data available"}
 
-def get_scene(telegram_bot: telebot.TeleBot, chat_id: int):
+def get_scene() -> dict:
     """
-        Returns a video of the scene
+    Returns a video of the scene.
+    
+    Returns:
+        A dictionary with status of the operation.
     """
+    telegram_bot = _current_context.get("telegram_bot")
+    chat_id = _current_context.get("chat_id")
+    
     if video_queue is not None:
         image_array = []
         while not video_queue.empty():
@@ -233,13 +186,22 @@ def get_scene(telegram_bot: telebot.TeleBot, chat_id: int):
         video_data = camera_utils.create_mp4_from_images(image_array)
         video_data.seek(0)
 
-        if video_data is not None:
+        if video_data is not None and telegram_bot and chat_id:
             telegram_bot.send_video(chat_id=chat_id, video=video_data)
+            return {"status": "success", "message": "Video captured and sent"}
+    
+    return {"status": "error", "message": "No video data available"}
 
-def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
+def describe_scene() -> dict:
     """
-        Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.
+    Returns a description of the scene by passing the past 30 seconds of video to the AI chat bot.
+    
+    Returns:
+        A dictionary with the video description.
     """
+    telegram_bot = _current_context.get("telegram_bot")
+    chat_id = _current_context.get("chat_id")
+    
     if video_queue is not None:
         image_array = []
         while not video_queue.empty():
@@ -257,88 +219,89 @@ def describe_scene(telegram_bot: telebot.TeleBot, chat_id: int):
         description =  ai_chat_bot.generate_content_from_video(prompt="Describe this video.", 
                                                     video_data=video_data.getvalue(),
                                                     mime_type="video/mp4")
-        if video_data is not None:
+        if video_data is not None and telegram_bot and chat_id:
             telegram_bot.send_video(chat_id=chat_id, video=video_data)
             telegram_bot.send_message(chat_id, description)
             ai_chat_bot.send_message(description)
+        
+        return {"description": description}
+    
+    return {"description": "No video data available"}
     
 def send_message_to_AI(message: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
-        Sends a message to the AI chat bot and returns the response
+    Sends a message to the AI chat bot and returns the response.
+    With automatic function calling enabled, the SDK will automatically:
+    1. Detect function calls in the model's response
+    2. Execute the corresponding Python functions
+    3. Send results back to the model
+    4. Return the final text response
     
-        Args: 
-            message (str): The message to send to the AI chat bot.
+    Args: 
+        message: The message to send to the AI chat bot.
+        telegram_bot: The telegram bot instance for sending responses.
+        chat_id: The chat ID to send responses to.
     """
-    response = ai_chat_bot.send_message(message)
-    output_message = response.text
+    # Set the current context so functions can access telegram_bot and chat_id
+    _current_context["telegram_bot"] = telegram_bot
+    _current_context["chat_id"] = chat_id
     
-    # execute any function calls in the response
-    if response.function_calls is not None:
-        output_message = ''
-        for function_call in response.function_calls:
-            func_name = function_call.name
-            args = function_call.args
-            
-            # Get the function from the current script's globals
-            func = globals().get(func_name)
-
-            if func:
-                # Create a copy of args to avoid modifying the original
-                execution_args = dict(args)
-                
-                # Add telegram_bot and chat_id to execution args if the function needs them
-                sig = inspect.signature(func)
-                if 'telegram_bot' in sig.parameters:
-                    execution_args['telegram_bot'] = telegram_bot
-                if 'chat_id' in sig.parameters:
-                    execution_args['chat_id'] = chat_id
-                
-                # Execute the function
-                try:
-                    # We don't capture the return value for now, just execute
-                    print(f"Executing function: {func_name} with args: {execution_args}")
-                    func(**execution_args)
-                    output_message += f"Executed function: {func_name}"
-                except Exception as e:
-                    output_message += f"Error executing function {func_name}: {e}"
-            else:
-                # Fallback for functions not found (using original args for display)
-                args_str = ", ".join(f"{key}={val}" for key, val in args.items())
-                output_message += f"Function call: {func_name}({args_str})"
-
-    telegram_bot.send_message(chat_id, output_message)
-    asyncio.run(say(output_message.replace('*','')))
+    try:
+        # With automatic function calling, send_message handles everything
+        response = ai_chat_bot.send_message(message)
+        output_message = response.text
+        
+        # Send response to telegram and TTS
+        telegram_bot.send_message(chat_id, output_message)
+        asyncio.run(say(output_message.replace('*','')))
+    finally:
+        # Clear context after request
+        _current_context["telegram_bot"] = None
+        _current_context["chat_id"] = None
 
 def map_instruction_to_action(instruction: str, telegram_bot: telebot.TeleBot, chat_id: int):
     """
-        Maps an instruction to an action
+    Maps an instruction to an action.
     
-        Args: 
-            instruction (str): The instruction to map to an action.
+    Args: 
+        instruction: The instruction to map to an action.
+        telegram_bot: Telegram bot instance for context.
+        chat_id: Chat ID for context.
+        
+    Returns:
+        The action name if mapped, None otherwise.
     """
-
-    list_of_commands = [t.strip('.').strip(',') for t in instruction.lower().split(' ')]
-    command_string = '_'.join(list_of_commands)
-    if command_string in ROBOT_COMMANDS:
-        hailo_bot.do_action(command_string)
-        return command_string
-    elif command_string.startswith('pick_up') and len(list_of_commands) > 2:
-        pick_up_object((' '.join(list_of_commands[2:])).strip('.'))
-        return 'pick up'
-    elif command_string.startswith('drop_off') and len(list_of_commands) > 2:
-        drop_off_object(list_of_commands[2].strip('.'))
-        return 'drop off'
-    elif command_string == 'describe_scene':
-        describe_scene(telegram_bot, chat_id)
-        return 'describe scene'
-    elif command_string == 'get_camera_metadata':
-        get_camera_metadata(telegram_bot, chat_id)
-        return 'get camera metadata'
-    elif command_string.startswith('find') and len(list_of_commands) > 1:
-        find_object((' '.join(list_of_commands[1:])).strip('.'), telegram_bot, chat_id)
-        return 'find object'
-    else:
-        return None
+    # Set context for function calls
+    _current_context["telegram_bot"] = telegram_bot
+    _current_context["chat_id"] = chat_id
+    
+    try:
+        list_of_commands = [t.strip('.').strip(',') for t in instruction.lower().split(' ')]
+        command_string = '_'.join(list_of_commands)
+        if command_string in ROBOT_COMMANDS:
+            hailo_bot.do_action(command_string)
+            return command_string
+        elif command_string.startswith('pick_up') and len(list_of_commands) > 2:
+            pick_up_object((' '.join(list_of_commands[2:])).strip('.'))
+            return 'pick up'
+        elif command_string.startswith('drop_off') and len(list_of_commands) > 2:
+            drop_off_object(list_of_commands[2].strip('.'))
+            return 'drop off'
+        elif command_string == 'describe_scene':
+            describe_scene()
+            return 'describe scene'
+        elif command_string == 'get_camera_metadata':
+            get_camera_metadata()
+            return 'get camera metadata'
+        elif command_string.startswith('find') and len(list_of_commands) > 1:
+            find_object((' '.join(list_of_commands[1:])).strip('.'))
+            return 'find object'
+        else:
+            return None
+    finally:
+        # Clear context
+        _current_context["telegram_bot"] = None
+        _current_context["chat_id"] = None
 
 def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
     """
@@ -355,14 +318,36 @@ def process_audio(downloaded_file, telegram_bot: telebot.TeleBot, chat_id: int):
     print(f'transcription: {transcription}')
     send_message_to_AI(transcription, telegram_bot, chat_id)
 
-def send_action_to_robot(message):
+def send_action_to_robot(message: str) -> dict:
     """
-        Sends an action to the robot
+    Sends an action command to the robot.
     
-        Args: 
-            message (str): The action to send to the robot.
+    Args: 
+        message (str): The action command to send to the robot.
+            Possible values include:
+            - "move_forward": Move the robot forward
+            - "go_left": Move the robot left
+            - "go_right": Move the robot right
+            - "go_up": Move the robot up
+            - "go_down": Move the robot down
+            - "go_backward": Move the robot backward
+            - "light_on": Turn the robot's light on
+            - "light_off": Turn the robot's light off
+            - "look_around": Make the robot look around
+            - "look_left": Make the robot look left
+            - "look_right": Make the robot look right
+            - "pick_up_start": Move the robot to pick up start position 
+            - "grab": Make the robot grab an object
+            - "reset": Reset the robot's position
+            - "hold": Make the robot hold an object
+            - "release": Make the robot release an object
+            - "throw": Make the robot throw an object
+        
+    Returns:
+        A dictionary with status and message about the action execution.
     """
     hailo_bot.do_action(message)
+    return {"status": "success", "message": f"Executed robot action: {message}"}
 
 def list_commands(telegram_bot: telebot.TeleBot, chat_id: int):
     """
@@ -381,7 +366,17 @@ def list_commands(telegram_bot: telebot.TeleBot, chat_id: int):
     telegram_bot.send_message(chat_id, "/track_object <object_name> <object_id>")
     telegram_bot.send_message(chat_id, "/list_commands")
 
-def track(object_name, object_id):
+def track(object_name: str, object_id: str) -> dict:
+    """
+    Tells the robot to track the specified object.
+    
+    Args:
+        object_name: The name of the object to track.
+        object_id: The ID of the object to track.
+        
+    Returns:
+        A dictionary with status and message about the tracking operation.
+    """
     global tracking
     tracking = False
     if camera_queue is not None:
@@ -406,12 +401,31 @@ def track(object_name, object_id):
                     tracking = False
                     break
             time.sleep(0.25)
+        
+        return {"status": "success", "message": f"Tracked {object_name} (ID: {object_id})"}
+    
+    return {"status": "error", "message": "No camera data available for tracking"}
 
 # Initialize the bot and robot
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 hailo_bot = Robot(speed=20, acceleration=10)
 ROBOT_COMMANDS = Robot.get_actions()
+
+# Define controller tools as actual Python functions for automatic function calling
+# The SDK will convert these to function declarations automatically
+_controller_tools = [
+    pick_up_object,
+    find_object,
+    get_scene,
+    describe_scene,
+    get_camera_metadata,
+    get_camera_image,
+    drop_off_object,
+    track,
+    send_action_to_robot,
+]
+
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat(_controller_tools)
 camera_queue = None
 video_queue = None

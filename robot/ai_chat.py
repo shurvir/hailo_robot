@@ -125,6 +125,11 @@ class GeminiChat(AIChat):
     def __init__(self, controller_tools=None):
         """
         Initializes a new instance of the GeminiChat class.
+        
+        Args:
+            controller_tools: List of Python callable functions to use as tools.
+                             The SDK will automatically convert them to function declarations
+                             and handle execution automatically.
         """
         self._client = genai.Client(api_key=GEMINI_API_KEY)
         self._model_name = "gemini-2.5-flash"
@@ -139,20 +144,10 @@ class GeminiChat(AIChat):
         You have access to the internet and can search for information. 
         """
 
-        # Default to no tools. If controller_tools is provided, expose them
-        # as function_declarations so Gemini can call the functions.
-        tools = [{'google_search': {}}]
-        if controller_tools is not None:
-            tools = [{'function_declarations': controller_tools}]
-
-        # Only set tool_config (function calling) when function_declarations
-        # are supplied. Setting FunctionCallingConfig without function_declarations
-        # leads to a 400 INVALID_ARGUMENT from the API.
-        tool_cfg = None
-        if controller_tools is not None:
-            tool_cfg = types.ToolConfig(
-                function_calling_config=types.FunctionCallingConfig(mode='AUTO')
-            )
+        # Configure tools for automatic function calling
+        # Pass Python functions directly - the SDK handles conversion to declarations
+        # and automatic execution of function calls
+        tools = controller_tools if controller_tools else []
 
         self._chat = self._client.chats.create(
             model=self._model_name,
@@ -160,10 +155,8 @@ class GeminiChat(AIChat):
                 system_instruction=system_instruction,
                 temperature=0.5,
                 tools=tools,
-                automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                    disable=True
-                ),
-                tool_config=tool_cfg,
+                # Enable automatic function calling (default behavior)
+                # The SDK will automatically execute functions and send results back
             )
         )
     

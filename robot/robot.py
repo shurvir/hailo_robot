@@ -392,6 +392,7 @@ class Robot():
             Robot._action_dictionary[action](self)
         else:
             print('Invalid action')
+            print(f'You tried to: {action}')
 
 def main():
     speed = 20
