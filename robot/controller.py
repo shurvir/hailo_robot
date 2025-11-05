@@ -325,7 +325,7 @@ def send_action_to_robot(message: str) -> dict:
     Args: 
         message (str): The action command to send to the robot.
             Possible values include:
-            - "move_forward": Move the robot forward
+            - "go_forward": Move the robot forward
             - "go_left": Move the robot left
             - "go_right": Move the robot right
             - "go_up": Move the robot up
@@ -406,6 +406,16 @@ def track(object_name: str, object_id: str) -> dict:
     
     return {"status": "error", "message": "No camera data available for tracking"}
 
+def wait(time_seconds: int) -> dict:
+    """
+    Tells the robot to wait for the specified number of seconds.
+    
+    Args:
+        time_seconds: The number of seconds to wait.
+    """
+    time.sleep(time_seconds)
+    return {"status": "success", "message": f"Waited for {time_seconds} seconds"}
+
 # Initialize the bot and robot
 BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -424,6 +434,7 @@ _controller_tools = [
     drop_off_object,
     track,
     send_action_to_robot,
+    wait,
 ]
 
 ai_chat_bot: ai_chat.AIChat = ai_chat.GeminiChat(_controller_tools)
