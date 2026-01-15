@@ -15,7 +15,7 @@ def initialize_arg_parser() -> argparse.ArgumentParser:
         description="Detection Example - Tracker with ByteTrack and Supervision"
     )
     parser.add_argument(
-        "-n", "--net", help="Path for the HEF model.", default="/home/pi/Documents/hailo_robot/models/yolov11m.hef"
+        "-n", "--net", help="Path for the HEF model.", default="/home/pi/Documents/hailo_robot/models/yolov11n.hef"
     )
     parser.add_argument(
         "-l", "--labels", default="/home/pi/Documents/hailo_robot/settings/coco.txt", help="Path to a text file containing labels."
