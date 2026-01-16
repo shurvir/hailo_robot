@@ -52,27 +52,24 @@ def extract_detections(
     class_id: List[int] = []
     num_detections: int = 0
 
-    for i, detections in enumerate(hailo_output):
-        if len(detections) == 0:
+    for i, detection in enumerate(hailo_output):
+        bbox, score = detection[:4], detection[4]
+
+        if score < threshold:
             continue
-        for detection in detections:
-            bbox, score = detection[:4], detection[4]
 
-            if score < threshold:
-                continue
+        # Convert bbox to xyxy absolute pixel values
+        bbox[0], bbox[1], bbox[2], bbox[3] = (
+            bbox[1] * w,
+            bbox[0] * h,
+            bbox[3] * w,
+            bbox[2] * h,
+        )
 
-            # Convert bbox to xyxy absolute pixel values
-            bbox[0], bbox[1], bbox[2], bbox[3] = (
-                bbox[1] * w,
-                bbox[0] * h,
-                bbox[3] * w,
-                bbox[2] * h,
-            )
-
-            xyxy.append(bbox)
-            confidence.append(score)
-            class_id.append(i)
-            num_detections += 1
+        xyxy.append(bbox)
+        confidence.append(score)
+        class_id.append(i)
+        num_detections += 1
 
     return {
         "xyxy": np.array(xyxy),
